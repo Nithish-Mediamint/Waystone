@@ -137,15 +137,17 @@ def handle_cusips(client_df, cusip_column, quantity_column, price_as_on_date):
         #changed ceil to round
         ws_df['Market Value (Quantity*Price)'] = ws_df['Market Value (Quantity*Price)'].apply(np.round)
         #PUT/CALL IMPLEMENTATION
-        if description_column is not None:
-            ws_df["description"] = desc_col_values
-            ws_df['PUT/CALL'] = ws_df.apply(lambda x: "PUT" if ("put" in x["description"].lower()) or (
-                    re.findall("p[0-9]", x["description"].lower()) and
-                    re.findall("p[0-9]", x["description"].lower())[0] in x["description"].lower()) else
-            ("CALL" if ("call" in x["description"].lower()) or (re.findall("c[0-9]", x["description"].lower()) and
-                                                                re.findall("c[0-9]", x["description"].lower())[0] in x[
-                                                                    "description"].lower()) else None), axis=1)
-            ws_df.drop('description', axis=1, inplace=True)
+        if desc_column is not None:
+            ws_df["PUT/CALL"] = desc_col_values
+            # print("ws----------------------descripti4oireog", ws_df)
+            # ws_df['PUT/CALL'] = ws_df.apply(lambda x: "PUT" if ("put" in x["description"].lower()) or (
+            #         re.findall("p[0-9]", x["description"].lower()) and
+            #         re.findall("p[0-9]", x["description"].lower())[0] in x["description"].lower()) else
+            # ("CALL" if ("call" in x["description"].lower()) or (re.findall("c[0-9]", x["description"].lower()) and
+            #                                                     re.findall("c[0-9]", x["description"].lower())[0] in x[
+            #                                                         "description"].lower()) else None), axis=1)
+            # print("ws----------------------descripti4oireog", ws_df)
+            # ws_df.drop('description', axis=1, inplace=True)
 
 
 
@@ -217,27 +219,118 @@ def validate_ws_cols(df):
     # List of required columns
     required_columns = [
         'CUSIP (Client)', 'Quantity', 'CUSIP (SEC)', 'Issuer Name (SEC)', 'Class (SEC)', 'Status (SEC)',
-        'Price', 'Ticker', 'SEC Match?', 'FIGI', 'SH/PRN', 'PUT/CALL', 'Market Value (Quantity*Price)',
+        'Price', 'Ticker', 'SEC Match?', 'FIGI', 'SH/PRN', 'Market Value (Quantity*Price)',
         'De Minimis?', 'Discretion Type', 'Other Managers', 'Sole', 'Shared', 'None', 'Complete?'
     ]
 
-    # Check if DataFrame has exactly the same columns as listed
-    if set(df.columns) == set(required_columns):
-        print("DataFrame has exactly the required columns.")
-        return True, ""
-    else:
-        missing_columns = set(required_columns) - set(df.columns)
-        extra_columns = set(df.columns) - set(required_columns)
-        if missing_columns:
-            return False, f"DataFrame is missing the following required columns: {', '.join(missing_columns)}"
-        if extra_columns:
-            return False, f"DataFrame has the following extra columns that are not required: {', '.join(extra_columns)}"
+    # Optional columns
+    optional_columns = ['PUT/CALL']
+
+    # Check for missing required columns
+    missing_columns = set(required_columns) - set(df.columns)
+
+    # Check for extra columns excluding optional ones
+    extra_columns = set(df.columns) - set(required_columns) - set(optional_columns)
+
+    if missing_columns:
+        return False, f"DataFrame is missing the following required columns: {', '.join(missing_columns)}"
+    if extra_columns:
+        return False, f"DataFrame has the following extra columns that are not required: {', '.join(extra_columns)}"
+
+    # If all required columns are present and extra columns are valid, return success
+    print("DataFrame has the required columns.")
+    return True, ""
+
+# Example usage:
+# result, message = validate_ws_cols(your_dataframe)
+# if not result:
+#     print(message)
+
+# Example usage:
+# result, message = validate_ws_cols(your_dataframe)
+# if not result:
+#     print(message)
 
 
 with tab0:
     n_preview = 15
     client_df = None
+    st.subheader("Combine Datasets")
+    client_data_file_1 = st.file_uploader(":blue[Upload Client Data first file]", type=['xlsx'], key="client_data3")
+    client_data_file_2 = st.file_uploader(":blue[Upload Client Data second file]", type=['xlsx'], key="client_data4")
+
+    if client_data_file_1 and client_data_file_2 is not None:
+        client_df_1 = pd.read_excel(client_data_file_1)
+        st.session_state['client_df_1'] = client_df_1
+        st.write(f"Preview of Client Data ({n_preview} rows only):")
+        st.dataframe(client_df_1.head(n_preview))
+        st.caption(f":green[{len(client_df_1)}] data rows and :green[{len(client_df_1.columns)}] columns were loaded")
+
+        client_df_2 = pd.read_excel(client_data_file_2)
+        st.session_state['client_df_2'] = client_df_2
+        st.write(f"Preview of Client Data ({n_preview} rows only):")
+        st.dataframe(client_df_2.head(n_preview))
+        st.caption(f":green[{len(client_df_2)}] data rows and :green[{len(client_df_2.columns)}] columns were loaded")
+
+        list_of_path = [client_data_file_1, client_data_file_2]
+        combined_df = pd.DataFrame()
+
+        for i in list_of_path:
+            df = pd.read_excel(i)
+            unnamed_columns = df.columns[df.columns.str.startswith('Unnamed:') & ~df.columns.isna()]
+            percentage_unnamed = len(unnamed_columns) / len(df.columns)
+
+            if percentage_unnamed > 0.7:
+                df.columns = df.iloc[0]
+                df = df.drop(df.index[0])
+
+            nan_count = df.columns.isnull().sum()
+            total_columns = len(df.columns)
+            nan_proportion = nan_count / total_columns
+
+            if nan_proportion > 0.7:
+                while any(pd.isna(df.columns)):
+                    df.columns = df.iloc[0]
+                    df = df.drop(df.index[0])
+
+            df.reset_index(drop=True, inplace=True)
+            last_20_rows = df.tail(20)
+            none_counts = last_20_rows.isna().sum(axis=1)
+            none_threshold = 0.6 * len(df.columns)
+            filtered_rows = last_20_rows[none_counts >= none_threshold]
+            df.drop(filtered_rows.index, inplace=True)
+
+            df = df.reset_index(drop=True)
+            combined_df = pd.concat([combined_df, df], ignore_index=True, sort=False)
+
+        file_name = st.text_input("Enter a name for the merged file:", value="Merged_File")
+
+        if st.button('Merge Files'):
+            def to_excel(df):
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Sheet1')
+                processed_data = output.getvalue()
+                return processed_data
+
+
+            def main():
+                excel_data = to_excel(combined_df)
+                st.caption("Your file is ready. Please click the below button to download the merged file.")
+                st.download_button(
+                    label="Download Excel file",
+                    data=excel_data,
+                    file_name=f'{file_name}.xlsx',
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+
+
+            if __name__ == "__main__":
+                main()
+
     # Upload area for Client Data
+    st.subheader("Locate Missing CUSIPs")
+    st.write("Please note: The ticker symbol is required.")
     st.write("""Kindly provide the client data in an XLSX file. """)
     client_data_file = st.file_uploader(":blue[Upload Client Data]", type=['xlsx'], key="client_data1")
     if client_data_file is not None:
@@ -287,8 +380,8 @@ with tab0:
 with tab1:
     st.header(""":blue[SEC 13F Data]""")
     n_preview = 15
-    sec_15_csv_path = 'resources/SEC-13F_FY2024_Q1.csv'
-    sec_15_pdf_path = 'resources/SEC_13F_Securities_FY2024Q1.pdf'
+    sec_15_csv_path = 'resources/13flist2024q2.csv'
+    sec_15_pdf_path = 'resources/13flist2024q2.pdf'
     # Upload area for 13F Table
     # st.divider()
 
@@ -360,30 +453,60 @@ with tab2:
         st.caption(f":green[{len(client_df)}] data rows and :green[{len(client_df.columns)}] columns were loaded")
         
         # Dropdown for selecting the CUSIP column
-        cusip_column = st.selectbox('Select the Identifier column:', client_df.columns, key='cusip_col')
+        cusip_column = st.selectbox('Select the Identifier column:*', client_df.columns, key='cusip_col')
         # Dropdown for selecting the Quantity column
-        quantity_column = st.selectbox('Select the Quantity column:', client_df.columns, key='quantity_col',index=1)
-        client_cf_columns = list(client_df.columns)
-        client_cf_columns.append(None)
-        description_column = st.selectbox('Select the Description column:', client_cf_columns, index=client_cf_columns.index(None), key='description1')
+        quantity_column = st.selectbox('Select the Quantity column:*', client_df.columns, key='quantity_col',index=1)
+        client_df_columns = list(client_df.columns)
+        client_df_columns.append(None)
+        desc_column = st.selectbox('Select the Description column:*', client_df_columns, index=client_df_columns.index(None), key='description1')
+        price_column = st.selectbox("Select the Price column:*", client_df_columns, index=client_df_columns.index(None), key='price1')
+        market_value_column = st.selectbox("Select the Market column:*", client_df_columns, index=client_df_columns.index(None), key='market_value1')
+
+        #DF with all positive values
+        client_df = client_df[client_df[quantity_column] >= 0]
+        # Calculate the market value column based on the given price and quantity
+        if price_column and market_value_column is not None:
+            client_df[quantity_column] = client_df.apply(lambda x: x[quantity_column]
+            if round(x[quantity_column] * x[price_column], 2) == round(x[market_value_column], 2) else x[quantity_column] * 100,
+                                                         axis=1)
         client_df = client_df.rename({cusip_column: cusip_column.lower()}, axis=1)
         cusip_column = cusip_column.lower()
+        if desc_column is not None:
+            # desc_col_values = client_df[desc_column]
 
-        if description_column is not None:
-            desc_col_values = client_df[description_column]
-
-            client_df['PUT/CALL'] = client_df.apply(lambda x: "PUT" if ("put" in x[description_column].lower()) or (
-                    re.findall("p[0-9]", x[description_column].lower()) and
-                    re.findall("p[0-9]", x[description_column].lower())[0] in x["DESCRIPTION"].lower()) else
-            ("CALL" if ("call" in x[description_column].lower()) or (re.findall("c[0-9]", x[description_column].lower()) and
-                                                         re.findall("c[0-9]", x[description_column].lower())[0] in x[
-                                                             description_column].lower()) else None), axis=1)
-
+            # client_df['PUT/CALL'] = client_df.apply(lambda x: "PUT" if ("put" in x[desc_column].lower()) or (
+            #         re.findall("p[0-9]", x[desc_column].lower()) and
+            #         re.findall("p[0-9]", x[desc_column].lower())[0] in x[desc_column].lower()) else
+            # ("CALL" if ("call" in x[desc_column].lower()) or (re.findall("c[0-9]", x[desc_column].lower()) and
+            #                                                   re.findall("c[0-9]", x[desc_column].lower())[0] in x[
+            #                                                       desc_column].lower()) else None), axis=1)
+            #
+            client_df['PUT/CALL'] = client_df.apply(
+                lambda x: (
+                    "PUT" if x[desc_column] is not None and x[desc_column] is not np.nan and (
+                            "put" in x[desc_column].lower() or
+                            (re.findall("p[0-9]", x[desc_column].lower()) and
+                             re.findall("p[0-9]", x[desc_column].lower())[0] in x[desc_column].lower())
+                    ) else (
+                        "CALL" if x[desc_column] is not None and x[desc_column] is not np.nan and (
+                                "call" in x[desc_column].lower() or
+                                (re.findall("c[0-9]", x[desc_column].lower()) and
+                                 re.findall("c[0-9]", x[desc_column].lower())[0] in x[desc_column].lower())
+                        ) else None
+                    )
+                ) if x[desc_column] is not None and x[desc_column] is not np.nan else None,
+                axis=1
+            )
+            print("client-df\n", client_df)
             client_df = client_df.groupby([cusip_column, 'PUT/CALL'])[quantity_column].sum().reset_index()
-            client_df.drop('PUT/CALL', axis=1, inplace=True)
-            st.write(f"Preview of UNIQUE CUSIPs ({n_preview} rows only):")
-            st.dataframe(client_df.head(n_preview))
-            st.caption(f":green[{len(client_df)}] data rows and :green[{len(client_df.columns)}] columns were loaded")
+            print("client-----------------df\n", client_df)
+            desc_col_values = client_df['PUT/CALL']
+            client_df.drop(['PUT/CALL'], axis=1, inplace=True)
+        else:
+            client_df = client_df.groupby([cusip_column])[quantity_column].sum().reset_index()
+        st.write(f"Preview of UNIQUE CUSIPs and Quantity(shares) ({n_preview} rows only):")
+        st.dataframe(client_df.head(n_preview))
+        st.caption(f":green[{len(client_df)}] data rows and :green[{len(client_df.columns)}] columns were loaded")
     st.write()
     st.divider()
 
@@ -457,7 +580,7 @@ with tab3: # '../resources/WorkingSheetTemplate.xlsx'
         working_sheet_df = pd.DataFrame(columns=header_details)
         st.session_state['working_sheet_df'] = working_sheet_df
         display_ag_grid_in_tab(working_sheet_df)
-    
+
 
     st.write("The generated worksheet is available for download to review and address any incomplete data.")
     if st.button('Create Download Link'):
@@ -481,7 +604,7 @@ with tab4:
                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         else:
             st.error(msg)
-    
+
     st.divider()
 
     # st.divider()
@@ -494,7 +617,7 @@ with tab4:
     #                       data=sec_13f_excel,
     #                       file_name="sec_13f_report.xlsx",
     #                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    
+
     # st.divider()
     # st.markdown("I've updated the Working Sheet with the necessary information and wish to upload the revised version for generating the SEC 13F Excel Report.")
 
