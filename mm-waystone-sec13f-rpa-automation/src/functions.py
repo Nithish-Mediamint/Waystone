@@ -32,13 +32,13 @@ def load_dataframe_from_excel(file, top_left, bottom_right, header):
         # Adjust 'skiprows' based on whether the first row is used as a header
         skiprows = int(re.findall(r'\d+', top_left)[0]) - (2 if header else 1)
         usecols = f"{top_left[0].upper()}:{bottom_right[0].upper()}"  # Columns to use
-        
+
         # Load the DataFrame with or without the header
         if header:
             df = pd.read_excel(file, usecols=usecols, skiprows=skiprows, header=0)
         else:
             df = pd.read_excel(file, usecols=usecols, skiprows=skiprows, header=None)
-            
+
         return df.dropna(how='all')  # Drop all empty rows
     else:
         # Default behavior when no coordinates are provided
@@ -92,9 +92,9 @@ def record_function_runtime(func):
 #     runtime_formatted = f"{minutes}m {seconds}s"  # Format the runtime
 #     return R2, runtime_formatted
 
-def merge_results(client_df: pd.DataFrame, 
+def merge_results(client_df: pd.DataFrame,
                                    cusip_col: str,
-                                   result_df: pd.DataFrame, 
+                                   result_df: pd.DataFrame,
                                    sec13f_df: pd.DataFrame):
 
     # Sanitize columns...
@@ -108,6 +108,8 @@ def merge_results(client_df: pd.DataFrame,
     merged_df = merged_df.drop(['CUSIP NO_formatted', 'ASTRK'], axis=1, errors='ignore')
 
     R = merged_df.merge(result_df, left_on=cusip_col, right_on='requestId', how='left', suffixes=('', '_drop'))
+    R = R.drop_duplicates().reset_index()
+    R.drop("index", axis=1, inplace=True)
     R = R.loc[:, ~R.columns.str.endswith('_drop')]
 
     R['Ticker'] = R.apply(lambda x: str(x['Ticker']).replace('-USA', ''), axis=1)
@@ -118,11 +120,11 @@ def merge_results(client_df: pd.DataFrame,
     print(R.head())
     # R = R.drop(['CUSIP'], axis=1, errors='ignore')
     return R
-    
+
 def run_mappings(client_df: pd.DataFrame,
                  sec13f_df: pd.DataFrame,
                  cusip_col: str,
-                 quantity_col: str, 
+                 quantity_col: str,
                  price_as_on_date: str):
 
     fs_processor = FormulaDataProcessor()
@@ -157,16 +159,16 @@ def run_mappings(client_df: pd.DataFrame,
             return R
         except Exception as e:
             st.error(f"Exception caught: {str(e)}")
-    
+
 def check_client_df_sanity(df: pd.DataFrame, cusip_col: str, quantity_col: str):
     # Check if the DataFrame has exactly 2 columns
     # if len(df.columns) != 2:
     #     return False, "Please ensure that the first sheet of your workbook contains only two columns \"Identifier\" and \"Quantity\". "
-    
+
     # Check if the column names match the expected cusip_col and quantity_col
     if not set([cusip_col, quantity_col]).issubset(df.columns):
         return False, f"Error: DataFrame does not have the specified columns '{cusip_col}' and '{quantity_col}'."
-    
+
     # Check for non-empty values in the cusip_col
     if df[cusip_col].isnull().any() or (df[cusip_col] == '').any():
         return False, f"Error: '{cusip_col}' column contains empty or missing values."
@@ -181,7 +183,7 @@ def check_client_df_sanity(df: pd.DataFrame, cusip_col: str, quantity_col: str):
     # Check for non-null values in the quantity_col and parsability as int or float
     if not all(df[quantity_col].apply(lambda x: isinstance(x, (int, float)) and not pd.isnull(x))):
         return False, f"Error: '{quantity_col}' column contains null values or values that cannot be parsed as int or float."
-    
+
     # If all checks pass
     return True, "Uploaded client data is in expected format."
 
@@ -254,13 +256,13 @@ def generate_13f_from_ws(ws_df):
     sec_13f_excel = generate_ws_13f(ws_df)
     return sec_13f_excel
     sec_13f_cols = ['Security Name', 'Class', 'CUSIP', 'FIGI', 'Market Value', 'Shares', 'SH/PRN', 'PUT/CALL', 'Discretion', 'Managers', 'Sole', 'Shared', 'None']
-    
+
      # Create an empty DataFrame with the specified columns
     sec_13f = pd.DataFrame(columns=sec_13f_cols)
-    
+
     # Create an in-memory bytes buffer
     excel_io = BytesIO()
-    
+
     # Use the ExcelWriter to write the DataFrame to the buffer as an Excel file
     with pd.ExcelWriter(excel_io, engine='xlsxwriter') as writer:
         sec_13f.to_excel(writer, index=False, sheet_name='13F')
@@ -268,6 +270,7 @@ def generate_13f_from_ws(ws_df):
     # Return the in-memory buffer containing the Excel file
     excel_io.seek(0)  # Go to the start of the stream
     return excel_io
+
 
 # getting missing cusip using ticker symbol in quantum online website
 def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
@@ -314,13 +317,21 @@ def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
     #
     # # results = []
     # k = 0
-    for i in range(len(cusips)):
-        # if cusips[i]:
-        if pd.isnull(cusips[i]) or cusips[i] == "":
-            # print(k)
-            # k = k + 1
-            # Simulate fetching ticker for each CUSIP
+    def extract_ticker(ticker_value):
+        # Ensure the ticker_value is a string
+        ticker_str = str(ticker_value)
+        # Split the string by both spaces and underscores
+        components = re.split(r'[ _]', ticker_str)
+        # Assume the ticker is always the first part
+        return components[0]
 
-            cusip = fetch_cusip_from_ticker(client_df[ticker_col][i])
-            # column_index = df.columns.get_loc('cusip')
+
+
+    for i in range(len(client_df)):
+        if pd.isnull(client_df[cusip_col][i]) or client_df[cusip_col][i] == "":
+            # Extract the ticker from the column
+            ticker = extract_ticker(client_df[ticker_col][i])
+            print("tllllllll:", ticker)
+            # Simulate fetching CUSIP for each ticker
+            cusip = fetch_cusip_from_ticker(ticker)
             client_df.loc[i, cusip_col] = cusip
