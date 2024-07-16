@@ -4,3 +4,4 @@ streamlit==1.32.2
 streamlit-aggrid==0.3.4.post3
 fds.sdk.Formula==2.2.3
 openpyxl==3.1.2
+lxml
