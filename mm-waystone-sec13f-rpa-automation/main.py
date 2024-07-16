@@ -5,11 +5,12 @@ import re
 import numpy as np
 import pandas as pd
 import streamlit as st
+
 from datetime import datetime
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 from src.functions import get_input, handle_ticker, load_dataframe_from_excel, run_mappings, generate_13f_from_ws, \
- check_client_df_sanity, parallel_fetch_cusips
+ check_client_df_sanity, parallel_fetch_cusips,last_date_of_previous_quarter
 
 from src.FactSet import FormulaDataProcessor
 
@@ -80,7 +81,7 @@ tab0, tab1, tab2, tab3, tab4 = st.tabs(
 def classify_sh_prn(class_value):
     equity_keywords = ["COM", "SHS", "CL A", "CL B", "CL C", "CLA", "ETF"]
     debt_keywords = ["EXP", "NOTE", "SDCV", "FRNT", "MTNF", "DEBT", "DBCV"]
-    
+
     for keyword in equity_keywords:
         if keyword in class_value:
             return "SH"
@@ -96,7 +97,7 @@ def classify_put_call(class_value):
     elif 'CALL' in class_value:
         return 'CALL'
     return None
-    
+
 def fill_in_ws(ws_df):
     # if 'working_sheet_df' in st.session_state:
     st.session_state['working_sheet_df'] = ws_df
@@ -106,23 +107,23 @@ def handle_cusips(client_df, cusip_column, quantity_column, price_as_on_date):
     print('Mapping client CUSIPs...')
     if client_df is not None:
         # ws_df, runtime = run_mappings(client_df=client_df, sec13f_df=sec13f_df, cusip_col=cusip_column, quantity_col=quantity_column)
-        ws_df = run_mappings(client_df=client_df, 
-                             sec13f_df=sec13f_df, 
-                             cusip_col=cusip_column, 
-                             quantity_col=quantity_column, 
+        ws_df = run_mappings(client_df=client_df,
+                             sec13f_df=sec13f_df,
+                             cusip_col=cusip_column,
+                             quantity_col=quantity_column,
                              price_as_on_date=price_as_on_date)
-        
+
         ws_df = ws_df.rename({cusip_column: 'CUSIP (Client)', 'EODPrice': 'Price'}, axis=1)
 
-        ws_df['SEC Match?'] = ws_df.apply(lambda x: 
-                              True if pd.notnull(x['CUSIP (SEC)']) and 
-                                      str(x['CUSIP (Client)']).replace(' ', '') == 
-                                      str(x['CUSIP (SEC)']).replace(' ', '') 
-                              else False, 
+        ws_df['SEC Match?'] = ws_df.apply(lambda x:
+                              True if pd.notnull(x['CUSIP (SEC)']) and
+                                      str(x['CUSIP (Client)']).replace(' ', '') ==
+                                      str(x['CUSIP (SEC)']).replace(' ', '')
+                              else False,
                               axis=1)
         ws_df['FIGI'] = ''
         ws_df['SH/PRN'] = ws_df.apply(lambda x: classify_sh_prn(str(x['Class (SEC)'])), axis=1)
-        # ws_df['PUT/CALL'] = ws_df.apply(lambda x: classify_put_call(str(x['Class (SEC)'])), axis=1)
+        ws_df['PUT/CALL'] = None
         ws_df['Market Value (Quantity*Price)'] = ''
         ws_df['De Minimis?'] = 'No'
         ws_df['Discretion Type'] = 'Sole'
@@ -179,7 +180,7 @@ def convert_ws_to_excel(ws_df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         ws_df.to_excel(writer, index=False, sheet_name='SEC-13F WorkingSheet')
-        
+
         # Get the xlsxwriter workbook and worksheet objects.
         workbook  = writer.book
         worksheet = writer.sheets['SEC-13F WorkingSheet']
@@ -336,18 +337,25 @@ with tab0:
     if client_data_file is not None:
         client_df = pd.read_excel(client_data_file)
         st.session_state['client_df'] = client_df
+        n_preview = 5  # Set the number of rows to preview
         st.write(f"Preview of Client Data ({n_preview} rows only):")
         st.dataframe(client_df.head(n_preview))
         st.caption(f":green[{len(client_df)}] data rows and :green[{len(client_df.columns)}] columns were loaded.")
+
+        # Check if 'cusip' column exists (case insensitive)
+        if not any(client_df.columns.str.lower() == 'cusip'):
+            client_df['cusip'] = None  # Add cusip column if it doesn't exist
+
+        # Dropdown for selecting the cusip column
         cusip_column = st.selectbox('Select the cusip column :', client_df.columns, key='cusip_col1')
-        # Dropdown for selecting the Quantity column
+        # Dropdown for selecting the ticker column
         ticker_column = st.selectbox('Select the ticker column :', client_df.columns, key='ticker_col1')
         st.caption(
-            f"""Now we have :green[{len(client_df)}] data rows  in those we have :green[{client_df[cusip_column].isnull().sum()}] missing cusips""")
+            f"Now we have :green[{len(client_df)}] data rows and :green[{client_df[cusip_column].isnull().sum()}] missing cusips")
+
     if st.button('Find Cusips'):
         if client_data_file is not None:
             start_time = time.time()
-
             mapped_df = parallel_fetch_cusips(client_df, ticker_col=ticker_column, cusip_col=cusip_column)
             end_time = time.time()
             print(end_time - start_time)
@@ -355,6 +363,7 @@ with tab0:
             st.caption(f"Now  we have :green[{client_df[cusip_column].isnull().sum()}] missing cusips")
 
 
+            # Function to convert dataframe to excel
             def to_excel(df):
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -363,6 +372,7 @@ with tab0:
                 return processed_data
 
 
+            # Main function to handle download button
             def main():
                 excel_data = to_excel(client_df)
                 # Create a download button
@@ -397,7 +407,7 @@ with tab1:
         st.info(info_string)
         st.dataframe(sec13f_df.head(n_preview))
         st.caption(f"Previewing :blue[{n_preview}] rows only")
-    
+
         # Create a download button in the Streamlit app
 
         col1, col2 = st.columns(2)
@@ -451,26 +461,60 @@ with tab2:
         st.write(f"Preview of Client Data ({n_preview} rows only):")
         st.dataframe(client_df.head(n_preview))
         st.caption(f":green[{len(client_df)}] data rows and :green[{len(client_df.columns)}] columns were loaded")
-        
-        # Dropdown for selecting the CUSIP column
-        cusip_column = st.selectbox('Select the Identifier column:*', client_df.columns, key='cusip_col')
-        # Dropdown for selecting the Quantity column
-        quantity_column = st.selectbox('Select the Quantity column:*', client_df.columns, key='quantity_col',index=1)
+
         client_df_columns = list(client_df.columns)
         client_df_columns.append(None)
+        # Dropdown for selecting the CUSIP column
+        cusip_column = st.selectbox('Select the Identifier column:*', client_df_columns, index=client_df_columns.index(None), key='cusip_col')
+        # Dropdown for selecting the Quantity column
+        quantity_column = st.selectbox('Select the Quantity column:*', client_df_columns, index=client_df_columns.index(None), key='quantity_col')
+
         desc_column = st.selectbox('Select the Description column:*', client_df_columns, index=client_df_columns.index(None), key='description1')
-        price_column = st.selectbox("Select the Price column:*", client_df_columns, index=client_df_columns.index(None), key='price1')
+        # price_column = st.selectbox("Select the Price column:*", client_df_columns, index=client_df_columns.index(None), key='price1')
         market_value_column = st.selectbox("Select the Market column:*", client_df_columns, index=client_df_columns.index(None), key='market_value1')
 
         #DF with all positive values
-        client_df = client_df[client_df[quantity_column] >= 0]
+        if quantity_column is not None:
+            def drop_rows(row):
+                if '-' in str(row[quantity_column]):
+                    client_df.drop(index=row.name, inplace=True)
+            # Apply the function using lambda and axis=1 to apply row-wise
+            client_df.apply(lambda x: drop_rows(x), axis=1)
+            client_df[quantity_column] = client_df[quantity_column].replace("$", "")
+        if cusip_column is not None:
+            # ids = list(str(client_df[cusip_column]))
+            # ids=list(str(client_df[cusip_column]))
+
+            client_df[cusip_column] =client_df[cusip_column].astype(str)
+            ids=list(client_df[cusip_column])
+            print(ids)
+            price_as_on_date=datetime(2024,6,30)
+            as_on_date = price_as_on_date.strftime("%m/%d/%Y")
+            display_names = ["EODPrice"]
+            timeSeries_formulas=["P_PRICE(NOW)"]
+            cross_formulas=[f"FG_PRICE({as_on_date})"]
+            cross_series_df = processor.fetch_data(ids, cross_formulas, display_names)
+            time_Series_df = processor.fetch_time_series_data(ids, timeSeries_formulas, display_names)
+            print("489999",cross_series_df)
+            print(time_Series_df)
+            merged_df = pd.merge(cross_series_df, time_Series_df, on='requestId', suffixes=('_df1', '_df2'))
+            cross_series_df['EODPrice'].fillna(merged_df['EODPrice_df2'], inplace=True)
+            # cross_series_df['Ticker'].fillna(merged_df['Ticker_df2'], inplace=True)
+            print("priceeeeeeeeeeeeeeeeeeeee:\n", cross_series_df)
+            if cross_series_df is not None:
+                # Do something with the results_df
+                pass
+            client_df = client_df.merge(cross_series_df[['requestId', 'EODPrice']], left_on=cusip_column, right_on="requestId", how='left')
+            print("497777777777777777777777777",client_df)
+
         # Calculate the market value column based on the given price and quantity
-        if price_column and market_value_column is not None:
+        if  market_value_column is not None:
             client_df[quantity_column] = client_df.apply(lambda x: x[quantity_column]
-            if round(x[quantity_column] * x[price_column], 2) == round(x[market_value_column], 2) else x[quantity_column] * 100,
+            if round(x[quantity_column] * x['EODPrice'], 2) == round(x[market_value_column], 2) else x[quantity_column] * 100,
                                                          axis=1)
-        client_df = client_df.rename({cusip_column: cusip_column.lower()}, axis=1)
-        cusip_column = cusip_column.lower()
+        if cusip_column is not None:
+            client_df = client_df.rename({cusip_column: cusip_column.lower()}, axis=1)
+            cusip_column = cusip_column.lower()
         if desc_column is not None:
             # desc_col_values = client_df[desc_column]
 
@@ -498,11 +542,16 @@ with tab2:
                 axis=1
             )
             print("client-df\n", client_df)
+            client_df['PUT/CALL'].fillna('NoneValue', inplace=True)
+            print("client-----------------df", client_df)
+            # Group by 'cusip_column' and 'PUT/CALL', sum 'quantity_column', and reset index
             client_df = client_df.groupby([cusip_column, 'PUT/CALL'])[quantity_column].sum().reset_index()
-            print("client-----------------df\n", client_df)
+            # Optionally, you can replace 'NoneValue' back to None after the groupby operation if needed.
+            client_df['PUT/CALL'].replace('No Value', np.nan, inplace=True)
+            print("client-----------------df", client_df)
             desc_col_values = client_df['PUT/CALL']
             client_df.drop(['PUT/CALL'], axis=1, inplace=True)
-        else:
+        elif cusip_column and quantity_column is not None:
             client_df = client_df.groupby([cusip_column])[quantity_column].sum().reset_index()
         st.write(f"Preview of UNIQUE CUSIPs and Quantity(shares) ({n_preview} rows only):")
         st.dataframe(client_df.head(n_preview))
@@ -511,11 +560,26 @@ with tab2:
     st.divider()
 
 
-    # AsOn Date Picker...
-    default_as_on_date = datetime(2024, 3, 31)
-    selected_date = st.date_input("Select a \"As Of\" date to retrieve Price data via the FactSet API (Usually this is End of Quarter date)", default_as_on_date)
+    # # AsOn Date Picker...
+    # default_as_on_date = datetime(2024, 3, 31)
+    # selected_date = st.date_input("Select a \"As Of\" date to retrieve Price data via the FactSet API (Usually this is End of Quarter date)", default_as_on_date)
+    # as_on_date = selected_date.strftime("%m/%d/%Y")
+    # print(f"User selected as_on date: {as_on_date}")
+    # Call the function to get the last date of the previous quarter
+
+    # Calculate the last day of the previous quarter
+    last_date_str = last_date_of_previous_quarter()
+    # Parse the string into year, month, and day
+    year, month, day = map(int, last_date_str.split('-'))
+
+    # Create a datetime object
+    default_as_on_date = datetime(year, month, day)
+    # Streamlit date input
+    selected_date = st.date_input(
+        "Select an 'As Of' date to retrieve Price data via the FactSet API (Usually this is End of Quarter date)",
+        default_as_on_date)
     as_on_date = selected_date.strftime("%m/%d/%Y")
-    print(f"User selected as_on date: {as_on_date}")
+    st.write(f"User selected as_on date: {as_on_date}")
 
     # Map button
     if st.button('Generate Mappings'):
