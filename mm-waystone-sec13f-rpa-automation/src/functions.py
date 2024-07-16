@@ -6,6 +6,7 @@ from lxml import html
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 import streamlit as st
+from datetime import datetime, timedelta
 from io import BytesIO
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
@@ -15,7 +16,8 @@ from src.FactSet import FormulaDataProcessor
 
 def get_input(key_prefix):
     """Helper function to get top-left, bottom-right cell coordinates, and header option from the user."""
-    st.markdown(":blue[Please choose the coordinates for the rectangular selection that corresponds to the :green[\"CUSIP\"] first value and :green[\"Quantity\"] first value columns in the client's Excel sheet.]")
+    st.markdown(
+        ":blue[Please choose the coordinates for the rectangular selection that corresponds to the :green[\"CUSIP\"] first value and :green[\"Quantity\"] first value columns in the client's Excel sheet.]")
     col1, col2 = st.columns(2)
     with col1:
         top_left = st.text_input("Top-Left Cell (e.g., A1)", key=f"{key_prefix}_top_left")
@@ -93,17 +95,17 @@ def record_function_runtime(func):
 #     return R2, runtime_formatted
 
 def merge_results(client_df: pd.DataFrame,
-                                   cusip_col: str,
-                                   result_df: pd.DataFrame,
-                                   sec13f_df: pd.DataFrame):
-
+                  cusip_col: str,
+                  result_df: pd.DataFrame,
+                  sec13f_df: pd.DataFrame):
     # Sanitize columns...
     client_df[cusip_col] = client_df[cusip_col].str.replace(' ', '')
     sec13f_df['CUSIP NO_formatted'] = sec13f_df['CUSIP NO'].str.replace(' ', '')
 
     result_df = result_df.drop(['Country', 'fsymId'], axis=1, errors='ignore')
 
-    merged_df = pd.merge(client_df, sec13f_df, left_on=cusip_col, right_on='CUSIP NO_formatted', how='left', suffixes=('', '_drop'))
+    merged_df = pd.merge(client_df, sec13f_df, left_on=cusip_col, right_on='CUSIP NO_formatted', how='left',
+                         suffixes=('', '_drop'))
     merged_df = merged_df.loc[:, ~merged_df.columns.str.endswith('_drop')]
     merged_df = merged_df.drop(['CUSIP NO_formatted', 'ASTRK'], axis=1, errors='ignore')
 
@@ -114,8 +116,9 @@ def merge_results(client_df: pd.DataFrame,
 
     R['Ticker'] = R.apply(lambda x: str(x['Ticker']).replace('-USA', ''), axis=1)
     R['Ticker'] = R.apply(lambda x: None if str(x['Ticker']) == 'None' else x['Ticker'], axis=1)
-    R = R.rename({'CUSIP NO': 'CUSIP (SEC)', 'ISSUER NAME': 'Issuer Name (SEC)', 'ISSUER DESCRIPTION': 'Class (SEC)', 'STATUS': 'Status (SEC)'}, axis=1)
-    R = R.drop(['requestId','CUSIP','ASTRK'], axis=1, errors='ignore')
+    R = R.rename({'CUSIP NO': 'CUSIP (SEC)', 'ISSUER NAME': 'Issuer Name (SEC)', 'ISSUER DESCRIPTION': 'Class (SEC)',
+                  'STATUS': 'Status (SEC)'}, axis=1)
+    R = R.drop(['requestId', 'CUSIP', 'ASTRK'], axis=1, errors='ignore')
     # R = R.drop(['', ''], axis=1, errors='ignore')
     print(R.head())
     # R = R.drop(['CUSIP'], axis=1, errors='ignore')
@@ -126,7 +129,6 @@ def run_mappings(client_df: pd.DataFrame,
                  cusip_col: str,
                  quantity_col: str,
                  price_as_on_date: str):
-
     fs_processor = FormulaDataProcessor()
 
     # Gather Identifiers from client_df
@@ -159,6 +161,7 @@ def run_mappings(client_df: pd.DataFrame,
             return R
         except Exception as e:
             st.error(f"Exception caught: {str(e)}")
+
 
 def check_client_df_sanity(df: pd.DataFrame, cusip_col: str, quantity_col: str):
     # Check if the DataFrame has exactly 2 columns
@@ -204,24 +207,40 @@ def insert_dataframe_into_worksheet(ws, df, start_row=5, start_col=1):
 
 def write_13f_excel(sec_13f_df):
     # Create a new Excel workbook and select the active worksheet
-        wb = openpyxl.Workbook()
-        ws = wb.active
+    wb = openpyxl.Workbook()
+    ws = wb.active
 
-        ws['A1'] = 'SEC 13F Report'
-        from datetime import datetime
-        today_date = datetime.now().strftime('%Y-%m-%d')
-        ws['A2'] = f'As Of: {today_date}'
-        # ws['A2'] = eod_date
+    ws['A1'] = 'SEC 13F Report'
+    from datetime import datetime
+    # today_date = datetime.now().strftime('%Y-%m-%d')
+    # Get the current date
+    current_date = datetime.now()
+    # Calculate the last day of the previous quarter
+    default_as_on_date = last_date_of_previous_quarter()
+    ws['A2'] = f'As Of: {default_as_on_date}'
+    # ws['A2'] = eod_date
+    count = len(sec_13f_df)
+    total_market_value = sec_13f_df['Market Value'].sum()
 
-        # Insert the DataFrame into the worksheet starting from row 5
-        insert_dataframe_into_worksheet(ws, sec_13f_df, start_row=5)
+    count_row = len(sec_13f_df) + 10
+    total_market_value_row = count_row + 1
 
-        # Save the workbook to a binary object in memory
-        excel_file = BytesIO()
-        wb.save(excel_file)
-        excel_file.seek(0)  # Rewind the buffer
+    # Insert Count and Total Market Value
+    ws[f'A{count_row}'] = 'Count:'
+    ws[f'B{count_row}'] = count
+    ws[f'A{total_market_value_row}'] = 'Total Market Value:'
+    ws[f'B{total_market_value_row}'] = total_market_value
 
-        return excel_file
+    # Insert the DataFrame into the worksheet starting from row 5
+    insert_dataframe_into_worksheet(ws, sec_13f_df, start_row=5)
+
+
+    # Save the workbook to a binary object in memory
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)  # Rewind the buffer
+
+    return excel_file
 
 def convert_ws_13f(ws_df):
     sec_13f_report_df = ws_df.copy()
@@ -234,16 +253,17 @@ def convert_ws_13f(ws_df):
     sec_13f_report_df = sec_13f_report_df.rename({'Discretion Type': 'Discretion'}, axis=1)
     sec_13f_report_df = sec_13f_report_df.rename({'Other Managers': 'Managers'}, axis=1)
 
-    sec_13f_report_df = sec_13f_report_df.drop(['Ticker (Client)', 'CUSIP (SEC)', 'Match?', 'Price', 'De Minimis?', 'Complete?'], axis=1, errors='ignore')
+    sec_13f_report_df = sec_13f_report_df.drop(
+        ['Ticker (Client)', 'CUSIP (SEC)', 'Match?', 'Price', 'De Minimis?', 'Complete?'], axis=1, errors='ignore')
 
-    sec_13f_report_df = sec_13f_report_df[['Security Name','Class', 'CUSIP', 'FIGI', 'Market Value', 'Shares', 'SH/PRN', 'PUT/CALL', 'Discretion', 'Managers', 'Sole', 'Shared', 'None']]
-
+    sec_13f_report_df = sec_13f_report_df[
+        ['Security Name', 'Class', 'CUSIP', 'FIGI', 'Market Value', 'Shares', 'SH/PRN', 'PUT/CALL', 'Discretion',
+         'Managers', 'Sole', 'Shared', 'None']]
 
     return sec_13f_report_df
 
 def generate_ws_13f(ws_revised=None):
-
-    if  ws_revised is None and 'working_sheet_df' in st.session_state:
+    if ws_revised is None and 'working_sheet_df' in st.session_state:
         ws_df = st.session_state['working_sheet_df']
         sec_13f_df = convert_ws_13f(ws_df)
     elif ws_revised is not None:
@@ -255,9 +275,10 @@ def generate_ws_13f(ws_revised=None):
 def generate_13f_from_ws(ws_df):
     sec_13f_excel = generate_ws_13f(ws_df)
     return sec_13f_excel
-    sec_13f_cols = ['Security Name', 'Class', 'CUSIP', 'FIGI', 'Market Value', 'Shares', 'SH/PRN', 'PUT/CALL', 'Discretion', 'Managers', 'Sole', 'Shared', 'None']
+    sec_13f_cols = ['Security Name', 'Class', 'CUSIP', 'FIGI', 'Market Value', 'Shares', 'SH/PRN', 'PUT/CALL',
+                    'Discretion', 'Managers', 'Sole', 'Shared', 'None']
 
-     # Create an empty DataFrame with the specified columns
+    # Create an empty DataFrame with the specified columns
     sec_13f = pd.DataFrame(columns=sec_13f_cols)
 
     # Create an in-memory bytes buffer
@@ -312,6 +333,7 @@ def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
 
     ### changes
     cusips = client_df[cusip_col].tolist()
+
     # # Determine the number of workers to use; we use N-1 cores, ensuring at least 1 core is free.
     # num_workers = max(1, os.cpu_count() - 1)
     #
@@ -325,8 +347,6 @@ def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
         # Assume the ticker is always the first part
         return components[0]
 
-
-
     for i in range(len(client_df)):
         if pd.isnull(client_df[cusip_col][i]) or client_df[cusip_col][i] == "":
             # Extract the ticker from the column
@@ -335,3 +355,24 @@ def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
             # Simulate fetching CUSIP for each ticker
             cusip = fetch_cusip_from_ticker(ticker)
             client_df.loc[i, cusip_col] = cusip
+
+
+def last_date_of_previous_quarter():
+    # Get the current date
+    current_date = datetime.now()
+
+    # Determine the current quarter
+    current_quarter = (current_date.month - 1) // 3 + 1
+
+    # Calculate the first month of the current quarter
+    first_month_current_quarter = (current_quarter - 1) * 3 + 1
+
+    # Calculate the first day of the current quarter
+    first_day_current_quarter = datetime(current_date.year, first_month_current_quarter, 1)
+
+    # Calculate the last day of the previous quarter
+    last_day_previous_quarter = first_day_current_quarter - timedelta(days=1)
+
+    return last_day_previous_quarter.strftime('%Y-%m-%d')
+
+
