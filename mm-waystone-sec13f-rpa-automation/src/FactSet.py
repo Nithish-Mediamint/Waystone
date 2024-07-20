@@ -13,7 +13,15 @@ from fds.sdk.Formula.apis import TimeSeriesApi
 
 class FormulaDataProcessor:
     def __init__(self, config_file='src/config/app-config.json'):
-        self.config = Configuration(fds_oauth_client=ConfidentialClient(config_file))
+        print(f"Attempting to load configuration from: {config_file}")  # Debugging statement
+        try:
+            with open(config_file, 'r') as f:
+                config_data = json.load(f)
+            self.config = Configuration(fds_oauth_client=ConfidentialClient(config_data))
+            print("Configuration loaded successfully.")  # Debugging statement
+        except Exception as e:
+            print(f"Error loading configuration: {e}")  # Debugging statement
+            self.config = None  # Handle error gracefully
     
     def check_health(self):
         # Obtain the token using ConfidentialClient from the SDK
