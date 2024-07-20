@@ -127,6 +127,13 @@ class FormulaDataProcessor:
 # Example Usage:
 if __name__ == "__main__":
     processor = FormulaDataProcessor()
+    if processor.config:
+        print(processor.config)
+        # Example accessing specific attributes
+        print("Client ID:", processor.config.clientId)
+        print("Redirect URIs:", processor.config.redirectUris)
+    else:
+        print("Failed to load configuration.")
 
     # Check Health
     is_healthy, health_info = processor.check_health()
