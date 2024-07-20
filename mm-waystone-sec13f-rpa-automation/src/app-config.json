@@ -1,7 +1,7 @@
 {
   "name": "13F Generator",
   "clientId": "fb296a8e3bab4bfc858cca330291a471",
-  "clientAuthType": "Confidential Client Application - User Authorization",
+  "clientAuthType": "Confidential",
   "owners": [
     "WAYSTON-1844786"
   ],
