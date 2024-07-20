@@ -1,26 +1,23 @@
 {
-  "name": "13F Generator",
-  "clientId": "fb296a8e3bab4bfc858cca330291a471",
-  "clientAuthType": "Confidential",
-  "owners": [
-    "WAYSTON-1844786"
-  ],
-  "jwk": {
-    "kty": "RSA",
-    "use": "sig",
-    "alg": "RS256",
-    "kid": "4d12b92f37a546c39408343d503cf86c",
-    "d": "A4MJqw8xIjwE1VmQO161cq3Xgmi0LgfOR1qBV7VKbAdBDQZ223T5V6kB2IdBHg9YfuH2t9yIaXwZAyQ1pYgGTIPoqUGPInxFrFrAhISv5rlZ9a7HMqJwznEEHhV8DpVV9RKedcOhUsh4_UMpcRDdtsbHrj6S0BM8Yp6nxhCTcX8O1h7zo7I8cPzyTHv3E9sW1AcOyncQ7vDBeOQAiR7Ygr3JKLonRmpoX7BR37iPr2XhQGl29k_ZY-QQ-3xz2rEmeigs-VfGiBWaagCfIeWwqIbm_JE8fBPNsyTHF_tuF9Gf4NgGhBmQZQQ5mEDtXkYHvHnBBMcnUMcDcR6BivE_4Q",
-    "n": "gJRVibSDx4e7jDaSlShynKURe-IM-f3BhkMIChoMM7nKRAGzC7QHhw7Nl3gVWr0lygFfgpw2ooo5q4JCCWRfnMas7kwkC-23b-ZhuBeDxvjyaxUBodfgFySxNkoaUyYeqfyAMqQNgK-Xj1MM53Hz73sPTmjW52h309BJ5k6WwAF9vhT0_cKDpl9DbRJDy6K3bElOrdeuCiixzjFxdDwikz7uwCc_kDQM-56rY_gn__HHzdv9dOOF8-PW-wGBz24Pco5ticR4HOzsQByDgYt5uGouHBTfxfBH4Tm6mW3mhzR847-gnSmNXG_DZEISovlHDIKu6byzTxCgkZ8vkdcyPw",
-    "e": "AQAB",
-    "p": "29CLGmI0qwPedkBn9D6ng-mLFcXlIFKaRreeQQfZUmqwOvwaQSjXC8a6rK7KfxjIIseB9J7lKCag4Ukn7TQ3XcCeFd2oRr8n1QzpfEeCLayvYXcweVEIi0k5L3b8q1B-UjYRCzRy7Az-aIYxDh3e8WxlZ9Hjt_ibxppaqke77Rc",
-    "q": "lb7yASEmSEx-nX0AwWrrXx03q2M_lScnYyE7vrUggY7qP0bdzEQ5_ueP9rFlzqpMu92h6x7Q7f_3m6h926o60UIBoPc60P43JY7eMzOgPkkA8nn0jb3NdBeBOYGd137VGgWCDc-sjFjLFQG--ui6gwhNsJA-OWq3wH1swbiwLRk",
-    "dp": "Iq5QhCUicij2HGok_KA2BdX_H7xNXkAqHyYxTclTPHGgxG2qJsWuyCjeowgg4tSiHvqjQlkfhqoxj9ne9snaQmx1hLWoKyFVw4N6AyW1IEeylAoeF8X1NySiZR681rqoc4gcQExSJXQXX55sdvG3jxevGCZBa3FKApev3lXbDJk",
-    "dq": "WMaD6GGDtZcL9Uf3W7OMaK4Eo-nJ9x3oPt-j8NKmu8hDXVIhCglkrJcRhTn0VkomBbZGWQLC8GYwoCqKuuC3z_kmyAvp5Z7giLajSo2PsX1MP3RHpIRiujF5HeOW9PuvUKb1TETTUb0OYJzRYST59dbFYCiTiyyWVVrGUC6y23k",
-    "qi": "n4WJPXRfuISzFAHku9TroeP9JIE5Ybw-CLMA0PCo3PT5dL8TH6WbkGbzkCd2FIQokqisHBOCfntjoneaH6-1SAx3iYPT-w_RzT_FGdSGWCDWPA1C1-eg7iiUDg6KC9w2o40WOuoMBkSZjqQ9cOfIwAsL-_MgyywOPUazef2F_rg"
-  },
-  "redirectUris": [
-    "https://waystonesec13f-a4y3f7svlgsybignwpramr.streamlit.app/"
-  ],
-  "wellKnownUri": "https://auth.factset.com/.well-known/openid-configuration"
-}
+    "name": "13FGenerator",
+    "clientId": "cf650f0025fd48d6b17e4b448b9f8212",
+    "clientAuthType": "Confidential",
+    "owners": [
+      "WAYSTON-1792950"
+    ],
+    "jwk": {
+      "kty": "RSA",
+      "use": "sig",
+      "alg": "RS256",
+      "kid": "714f7e3307cc48ddb97d08d0e4ac962b",
+      "d": "W-PFpNSQbNThDUrQOKwkWzjXEjiwpMW8_cNO4joQeY-O0UYbG8qzwFGbsA011bSEMUoJ1TfGwKmw6yrhyZSe0SEPFkf6WjnAZO9Lss-2BtgK7FsBI6sL-DOW2tSHMSEGpP5WXS-JPecPTQvKM7yM6BOMxgg4OLTeF1htX4Tq--C8ZXO0e7NUY7nBgo67Qu9HTpgrhx4n5EYDd9bDcsEHeXailmBgoCr2MCk3xbHgKRbFC4AaR_6BZCK1B6BfWsI3tMgD8wm2e5ofVSj2kUncNuNVke0ZKhS7ooTmbvPqc8XN-PtRw4dBT79iOtHBSLIt4unvsyaBQn0bhMoCGGl6qQ",
+      "n": "guWguu49bWLW2jkFXeO_9jDsb560y2bx8nrxW4iaiBfzfvTNEZlbaV5xsHfHK608J8Ons09GgjKWxA3OEWKnJv0ljN4zMX7jRmSkBvDolSiuCJGYMeFLNZw5v9bhIe1brFE8eftIpp8GeNHW4G0nfmtizeBI1OYdCTvy7z9PA1CkYTZ1ihbpkbXLLPh2p7IOd8mHjRo68c-Q-8_cv-S17T9PJoK9Z8kgXV33IWtXcP83b9VXsVM3Zh16MWEavf6rlq4Ndyc5sUItMn5kaT6U_GZsHJgzCPKsk6z7oTMzLeE4VR2_gWemS74AvKizy9bi8ZRbUvqWzQVT5dPr7_60dw",
+      "e": "AQAB",
+      "p": "69g35zPGJkqMtEFc6gamFE99ixc2FdxjRUMleA1wFRUvIdCT39MrEgPs9Z4VAqXtt2joAwdS2S2tTjtM7yH48rRrSPJLpgTshz1mIBJGcNbdiqUBnWPZyoCddjPxxmaBr9Bwp4qZ4YP5Yi5s0qoYebIAPa7TvoXjjcoAJBvwqbM",
+      "q": "jhVgluYCxadVk0sc9f4HrLDh_WNegVxeiVpnZCNFQe4GcGzbxMQW341mNh58Jy6qWNjJV3IaW2mWdCPxk6a94MZZ-mdvaeksCcwd-6rqpRGlAvrag43cZ9F52dyB9U7Urm9hMm9ESPv1Pa8xFuuJ5wk3NartkYhRBVktVY5boC0",
+      "dp": "MGmhCB_TpBaXjYUBWrTksLSkk8G_A3vLEPO4pE013c4Mb8eOI1sIs1kE8mJx86o2AvlQ7xY4xoYe1jlMEKaLoN6ySzYZm0nVd-l9pkW6Gf2xWn2GuFU_5tbB-_qrvctbAckq5umHrwhVT_cxtYjfH1QPwpm5s5luXbPClab6nws",
+      "dq": "dQufOi_Y8MJceK5T-UF_SP-d64NEgwR4zGWw7okvsJRIsay7jmiK_zYYkVSjqhODORW9J1BT7iIZUyuZAq1FljlQPjufSHxRTvDbckrmaX0TllTYVa8zdkLWQmaomFCMW_Zc95M5iXYmHN6Jbfwy6iRpWsioVE8bj3BbLDPNvzE",
+      "qi": "TDBhy7AmMU6MFWKAtXcKDS9bMak1QtQEe2QLFm4iF8VjEgJ69RHxSnpZdanK2vkIdE_KCBrTrJBYgbICAHg6KDtIRpLvf4AbEd0cZwevHzSqHinmHC2lywZxOKCtpVbq1OEjOwas3IvsvsOQ-EF6s_N8L2P7iHSTHTl5k8zhHyw"
+    },
+    "wellKnownUri": "https://auth.factset.com/.well-known/openid-configuration"
+  }
