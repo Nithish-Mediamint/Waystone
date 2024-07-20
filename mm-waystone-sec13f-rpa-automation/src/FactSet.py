@@ -12,7 +12,7 @@ from fds.sdk.Formula.apis import TimeSeriesApi
 
 
 class FormulaDataProcessor:
-    def __init__(self, config_file='src\config\app-config.json'):
+    def __init__(self, config_file='src\\config\\app-config.json'):
         self.config = Configuration(fds_oauth_client=ConfidentialClient(config_file))
     
     def check_health(self):
