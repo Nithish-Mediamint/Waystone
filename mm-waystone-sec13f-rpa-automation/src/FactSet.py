@@ -8,6 +8,7 @@ from fds.sdk.Formula.apis import CrossSectionalApi, BatchProcessingApi
 from fds.sdk.Formula.models import CrossSectionalRequest, CrossSectionalRequestData, BatchDataRequest, \
    BatchDataRequestData
 from fds.sdk.Formula.models import TimeSeriesRequest, TimeSeriesRequestData
+ 
 from fds.sdk.Formula.apis import TimeSeriesApi
 
 
@@ -16,8 +17,6 @@ from fds.sdk.Formula.apis import TimeSeriesApi
 class FormulaDataProcessor:
    def __init__(self, config_file='mm-waystone-sec13f-rpa-automation/src/config/appconfig.json'):
        self.config = Configuration(fds_oauth_client=ConfidentialClient(config_file))
-     
-
 
 
    def check_health(self):
