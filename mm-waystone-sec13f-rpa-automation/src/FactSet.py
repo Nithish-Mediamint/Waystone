@@ -14,8 +14,10 @@ from fds.sdk.Formula.apis import TimeSeriesApi
 
 
 class FormulaDataProcessor:
-   def __init__(self, config_file='src/config/appconfig.json'):
+   def __init__(self, config_file=' mm-waystone-sec13f-rpa-automation/src/config/config.json'):
        self.config = Configuration(fds_oauth_client=ConfidentialClient(config_file))
+     
+
 
 
    def check_health(self):
