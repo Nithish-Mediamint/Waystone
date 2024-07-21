@@ -24,9 +24,37 @@ class FormulaDataProcessor:
             self.config = None  # Handle error gracefully
     
     def check_health(self):
-        # Obtain the token using ConfidentialClient from the SDK
-        client_credentials = self.config.fds_oauth_client
-        access_token = client_credentials.get_access_token()
+        try:
+            # Obtain the token using ConfidentialClient from the SDK
+            client_credentials = self.config.fds_oauth_client
+            
+            # Log an informational message
+            logger.info("Successfully retrieved client_credentials.")
+            
+            # Assuming get_access_token() is a method on client_credentials to retrieve the access token
+            access_token = client_credentials.get_access_token()
+            
+            # Log the access token for debugging or informational purposes
+            logger.debug(f"Access token retrieved: {access_token}")
+            
+            # Proceed with health check logic using the access token
+            # ...
+            
+        except AttributeError:
+            # Handle the case where self.config or fds_oauth_client is not properly configured
+            logger.error("AttributeError: fds_oauth_client is not properly configured.")
+            # Optionally, provide guidance for fixing the configuration issue
+            # logger.info("Please check your configuration settings for fds_oauth_client.")
+            
+        except Exception as e:
+            # Handle other potential exceptions
+            logger.error(f"Error occurred while accessing client_credentials: {str(e)}")
+            # Additional logging or exception handling as needed
+            
+        else:
+            # Additional logic if no exceptions occurred
+            pass
+
         
         # Define the header with the access token
         headers = {
