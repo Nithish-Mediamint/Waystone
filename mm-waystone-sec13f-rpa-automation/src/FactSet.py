@@ -8,10 +8,18 @@ from fds.sdk.Formula.apis import CrossSectionalApi, BatchProcessingApi
 from fds.sdk.Formula.models import CrossSectionalRequest, CrossSectionalRequestData, BatchDataRequest, BatchDataRequestData
 from fds.sdk.Formula.models import TimeSeriesRequest, TimeSeriesRequestData
 from fds.sdk.Formula.apis import TimeSeriesApi
+import logging
 
 
 
 class FormulaDataProcessor:
+    
+    logging.basicConfig(level=logging.DEBUG,  # Set the logging level to DEBUG or appropriate level
+                    format='%(asctime)s - %(levelname)s - %(message)s')  # Define the log message format
+
+# Create a logger instance
+    logger = logging.getLogger(__name__)  # You can use __name__ to automatically set the logger name
+
     def __init__(self, config_file='src/config/app-config.json'):
         print(f"Attempting to load configuration from: {config_file}")  # Debugging statement
         try:
