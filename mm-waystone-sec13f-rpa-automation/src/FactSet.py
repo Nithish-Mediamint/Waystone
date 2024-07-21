@@ -13,7 +13,7 @@ from fds.sdk.Formula.apis import TimeSeriesApi
 
 
 class FormulaDataProcessor:
-    def __init__(self, config_file='src/config/config.json'):
+    def __init__(self, config_file='src/config/appconfig.json'):
         # Check if the config file exists
         if not os.path.exists(config_file):
             raise FileNotFoundError(f"Configuration file not found: {config_file}")
