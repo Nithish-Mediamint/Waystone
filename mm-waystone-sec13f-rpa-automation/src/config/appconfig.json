@@ -1,7 +1,7 @@
 {
-  "name": "Waystone",
-  "clientId": "0246a35727fd42b392ed44ea3668565c",
-  "clientAuthType": "Confidential Client Application - Machine Authorization",
+  "name": "13F Generator",
+  "clientId": "fb296a8e3bab4bfc858cca330291a471",
+  "clientAuthType": "Confidential Client Application - User Authorization",
   "owners": [
     "WAYSTON-1844786"
   ],
@@ -9,15 +9,18 @@
     "kty": "RSA",
     "use": "sig",
     "alg": "RS256",
-    "kid": "90daf8574aa849459af9092a9aee4926",
-    "d": "HaA2stGPM9t1Lujt2hB0X7DuIF9WR5Jm4L8kjIo8TEXtkPFCOcxrlgUYUFKSGnebvfXUUVajbO80myNG_pfR3zOHk6dZJGWlG3hkGUpqcr-3GJPdiE8poF7HhLpcZvNFILXojPDVVGJklaSvfWniysmkqIGOtKaWAnaASDkfVahe0SA8M7GGblX2HDYcCHN6SFjY9pAFWCfdAHbqlzZQO1ICt-gwnHlDdQF5L_fbWEAF3ZCMdLDascDgNZblQmc_mYSCGzlk1bRJ1Ec_Un5SyZkK_f6guJlMaS0juehrMOdZXkTZVtc7W6SbmB1jQRYP6eJYXqUGkF19YV2i1DsKwQ",
-    "n": "hcq7L0gCWoH-fUkLoAFiOawiLNU3KRRLaoOfHMSZ8Mw9Xohh2m_dm9BFPyIx5-XcQKmsBCUPBbD_VfFcVBbe0YYwG-x34X7lxT9_mzX5vZGIML1_OhXEb-tAsmolR699Y4vgcDfs5itXo5X3AUtdOYQVNOPm_UVWz2Q_M4kGMB-54x_Ela85LDyL_Jor2sBkTz80GVW4WY1Z_2oKWirx8lt_tXfVHsc1fvF_Vs_OdiTn06XFOjWNzD0241M5cFnWdY1_D_h_y4876AspoR70a_uzPPwAvhoT8uMA8F5KLyK0s-v8pg6OMx4S-D40EmkWX03Z9QUb5MD3HJRxgmM3IQ",
+    "kid": "4d12b92f37a546c39408343d503cf86c",
+    "d": "A4MJqw8xIjwE1VmQO161cq3Xgmi0LgfOR1qBV7VKbAdBDQZ223T5V6kB2IdBHg9YfuH2t9yIaXwZAyQ1pYgGTIPoqUGPInxFrFrAhISv5rlZ9a7HMqJwznEEHhV8DpVV9RKedcOhUsh4_UMpcRDdtsbHrj6S0BM8Yp6nxhCTcX8O1h7zo7I8cPzyTHv3E9sW1AcOyncQ7vDBeOQAiR7Ygr3JKLonRmpoX7BR37iPr2XhQGl29k_ZY-QQ-3xz2rEmeigs-VfGiBWaagCfIeWwqIbm_JE8fBPNsyTHF_tuF9Gf4NgGhBmQZQQ5mEDtXkYHvHnBBMcnUMcDcR6BivE_4Q",
+    "n": "gJRVibSDx4e7jDaSlShynKURe-IM-f3BhkMIChoMM7nKRAGzC7QHhw7Nl3gVWr0lygFfgpw2ooo5q4JCCWRfnMas7kwkC-23b-ZhuBeDxvjyaxUBodfgFySxNkoaUyYeqfyAMqQNgK-Xj1MM53Hz73sPTmjW52h309BJ5k6WwAF9vhT0_cKDpl9DbRJDy6K3bElOrdeuCiixzjFxdDwikz7uwCc_kDQM-56rY_gn__HHzdv9dOOF8-PW-wGBz24Pco5ticR4HOzsQByDgYt5uGouHBTfxfBH4Tm6mW3mhzR847-gnSmNXG_DZEISovlHDIKu6byzTxCgkZ8vkdcyPw",
     "e": "AQAB",
-    "p": "vsqEakChzllgyjW_ba_4ApZxRjY_Unqg3Esbel3bnJz7IyqXH28TjzYKnOB4D7dS8Qx7QmeCX7eGTVXeDiSIhEh3RhDeEd166DcIaK2iQJuGZjGN6NqYz_ri-ad0RpkmS9fJurP1pA8SbsAA099h_WPrVi5NaUU9ZjVfgNA5x7c",
-    "q": "s4UB20A0wOmAgxRB5o3cX4mdE7gG8klhiJCso35pKz_iy5Le3a72izgphvz1CmLjfyWbO-LV6FHCKuuahFKnOwSnF_piZuPB6xuulHdWybCjOgKCuFxpwB1e6zfD0gcfgnIKIdhnDxCSJYwxCdul_HnK6D1O5DQwD1735oCGB-c",
-    "dp": "PLu-1wvn9gXhl7zwSPxhGIHHYTBXi-vZVQbbomJKTFp0X0dpf-od8dKkIjgaP_Z9gpoUipjkmY-UQv34h8v9YQ6oWTd5WXqFa3JJTPko0yQu7k0L_XnIdzxIEGzLyMVruWzhnHs40JazqWmZWdicGss52N84aTBPUT_gPOML4ZU",
-    "dq": "sQFFalRtb4UMlLIlpFld38mFWosKNl1KUOgtgOtEcUOFsKn5G2XHbFANCi9iwUHuBFElNbAcr_vlUoKKEUyZ3WRiCQ91dPO_Ib1irrrYlPeYibst_vAHyUhsbcrHRtCFLg6ZlPOV8lGpeGI5e_naOQ4xljnVDseyV4WRMvKotSM",
-    "qi": "a9btKk_G7ZbGmUnzfxw0mfAYzoylZ1Y0rI6gUym9xiULRyVNhne8RdFoPGR5FHNliZzxlMXxiNFYEVje24madJ2s1sSyj4VtZo-7NWtV_ch2Ea753eyrvXa6kojctMSa10mf87Dhr_SRdR_eAnl-GqklX5rQPu2Yq4WFSRajd3U"
+    "p": "29CLGmI0qwPedkBn9D6ng-mLFcXlIFKaRreeQQfZUmqwOvwaQSjXC8a6rK7KfxjIIseB9J7lKCag4Ukn7TQ3XcCeFd2oRr8n1QzpfEeCLayvYXcweVEIi0k5L3b8q1B-UjYRCzRy7Az-aIYxDh3e8WxlZ9Hjt_ibxppaqke77Rc",
+    "q": "lb7yASEmSEx-nX0AwWrrXx03q2M_lScnYyE7vrUggY7qP0bdzEQ5_ueP9rFlzqpMu92h6x7Q7f_3m6h926o60UIBoPc60P43JY7eMzOgPkkA8nn0jb3NdBeBOYGd137VGgWCDc-sjFjLFQG--ui6gwhNsJA-OWq3wH1swbiwLRk",
+    "dp": "Iq5QhCUicij2HGok_KA2BdX_H7xNXkAqHyYxTclTPHGgxG2qJsWuyCjeowgg4tSiHvqjQlkfhqoxj9ne9snaQmx1hLWoKyFVw4N6AyW1IEeylAoeF8X1NySiZR681rqoc4gcQExSJXQXX55sdvG3jxevGCZBa3FKApev3lXbDJk",
+    "dq": "WMaD6GGDtZcL9Uf3W7OMaK4Eo-nJ9x3oPt-j8NKmu8hDXVIhCglkrJcRhTn0VkomBbZGWQLC8GYwoCqKuuC3z_kmyAvp5Z7giLajSo2PsX1MP3RHpIRiujF5HeOW9PuvUKb1TETTUb0OYJzRYST59dbFYCiTiyyWVVrGUC6y23k",
+    "qi": "n4WJPXRfuISzFAHku9TroeP9JIE5Ybw-CLMA0PCo3PT5dL8TH6WbkGbzkCd2FIQokqisHBOCfntjoneaH6-1SAx3iYPT-w_RzT_FGdSGWCDWPA1C1-eg7iiUDg6KC9w2o40WOuoMBkSZjqQ9cOfIwAsL-_MgyywOPUazef2F_rg"
   },
+  "redirectUris": [
+    "https://waystonesec13f-a4y3f7svlgsybignwpramr.streamlit.app/"
+  ],
   "wellKnownUri": "https://auth.factset.com/.well-known/openid-configuration"
 }
