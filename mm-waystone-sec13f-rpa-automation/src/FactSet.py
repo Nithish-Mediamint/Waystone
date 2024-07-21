@@ -8,61 +8,17 @@ from fds.sdk.Formula.apis import CrossSectionalApi, BatchProcessingApi
 from fds.sdk.Formula.models import CrossSectionalRequest, CrossSectionalRequestData, BatchDataRequest, BatchDataRequestData
 from fds.sdk.Formula.models import TimeSeriesRequest, TimeSeriesRequestData
 from fds.sdk.Formula.apis import TimeSeriesApi
-import logging
 
 
 
 class FormulaDataProcessor:
-    
-    logging.basicConfig(level=logging.DEBUG,  # Set the logging level to DEBUG or appropriate level
-                    format='%(asctime)s - %(levelname)s - %(message)s')  # Define the log message format
-
-# Create a logger instance
-    logger = logging.getLogger(__name__)  # You can use __name__ to automatically set the logger name
-
     def __init__(self, config_file='src/config/app-config.json'):
-        print(f"Attempting to load configuration from: {config_file}")  # Debugging statement
-        try:
-            with open(config_file, 'r') as f:
-                config_data = json.load(f)
-            self.config = Configuration(fds_oauth_client=ConfidentialClient(config_data))
-            print("Configuration loaded successfully.")  # Debugging statement
-        except Exception as e:
-            print(f"Error loading configuration: {e}")  # Debugging statement
-            self.config = None  # Handle error gracefully
+        self.config = Configuration(fds_oauth_client=ConfidentialClient(config_file))
     
     def check_health(self):
-        try:
-            # Obtain the token using ConfidentialClient from the SDK
-            client_credentials = self.config.fds_oauth_client
-            
-            # Log an informational message
-            logger.info("Successfully retrieved client_credentials.")
-            
-            # Assuming get_access_token() is a method on client_credentials to retrieve the access token
-            access_token = client_credentials.get_access_token()
-            
-            # Log the access token for debugging or informational purposes
-            logger.debug(f"Access token retrieved: {access_token}")
-            
-            # Proceed with health check logic using the access token
-            # ...
-            
-        except AttributeError:
-            # Handle the case where self.config or fds_oauth_client is not properly configured
-            logger.error("AttributeError: fds_oauth_client is not properly configured.")
-            # Optionally, provide guidance for fixing the configuration issue
-            # logger.info("Please check your configuration settings for fds_oauth_client.")
-            
-        except Exception as e:
-            # Handle other potential exceptions
-            logger.error(f"Error occurred while accessing client_credentials: {str(e)}")
-            # Additional logging or exception handling as needed
-            
-        else:
-            # Additional logic if no exceptions occurred
-            pass
-
+        # Obtain the token using ConfidentialClient from the SDK
+        client_credentials = self.config.fds_oauth_client
+        access_token = client_credentials.get_access_token()
         
         # Define the header with the access token
         headers = {
@@ -163,13 +119,6 @@ class FormulaDataProcessor:
 # Example Usage:
 if __name__ == "__main__":
     processor = FormulaDataProcessor()
-    if processor.config:
-        print(processor.config)
-        # Example accessing specific attributes
-        print("Client ID:", processor.config.clientId)
-        print("Redirect URIs:", processor.config.redirectUris)
-    else:
-        print("Failed to load configuration.")
 
     # Check Health
     is_healthy, health_info = processor.check_health()
