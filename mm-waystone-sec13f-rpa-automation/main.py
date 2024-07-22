@@ -237,7 +237,6 @@ def handle_cusips(client_df, cusip_column, quantity_column, price_as_on_date):
           axis=1)
       else:
           print("Not Available")
-      print("Data............",ws_df)
       ws_df = ws_df.rename({quantity_column: 'Quantity'}, axis=1)
       #Excluding CUsip's WhicH are not in SEC 13f
       print("Beforeeeeeeeeeee\n:",ws_df)
@@ -539,9 +538,7 @@ with tab0:
       # combined_df.to_excel(r'C:\Users\mm3816\Desktop\ravi_files\combined_sheets.xlsx', index=False)
 
 
-      # print("All sheets have been combined into 'combined_sheets_aligned.xlsx'.")
-      # print(combined_df.columns)
-      # print(combined_df)
+      
       st.dataframe(combined_df)
       if st.button('combine all sheets into one'):
           def to_excel(df):
@@ -838,10 +835,7 @@ with tab2:
           cross_formulas=[f"FG_PRICE({as_on_date})"]
           cross_series_df = processor.fetch_data(ids, cross_formulas, display_names)
           time_Series_df = processor.fetch_time_series_data(ids, timeSeries_formulas, display_names)
-          print("489999_cross\n",cross_series_df)
-          print("499999_time\n",time_Series_df)
           merged_df = pd.merge(cross_series_df, time_Series_df, on='requestId', suffixes=('_df1', '_df2'))
-          print("merged_df",merged_df)
           cross_series_df['EODPrice'].fillna(merged_df['EODPrice_df2'], inplace=True)
           # cross_series_df['Ticker'].fillna(merged_df['Ticker_df2'], inplace=True)
           print("priceeeeeeeeeeeeeeeeeeeee:\n", cross_series_df)
@@ -849,7 +843,7 @@ with tab2:
               # Do something with the results_df
               pass
           client_df = client_df.merge(cross_series_df[['requestId', 'EODPrice']], left_on=cusip_column, right_on="requestId", how='left')
-          print("497777777777777777777777777\n",client_df)
+          print("4977\n",client_df)
 
 
 
@@ -891,14 +885,11 @@ with tab2:
               ) if x[desc_column] is not None and x[desc_column] is not np.nan else None,
               axis=1
           )
-          print("client-df\n", client_df)
           client_df['PUT/CALL'].fillna('NoneValue', inplace=True)
-          print("client-----------------df", client_df)
           # Group by 'cusip_column' and 'PUT/CALL', sum 'quantity_column', and reset index
           client_df = client_df.groupby([cusip_column, 'PUT/CALL'])[quantity_column].sum().reset_index()
           # Optionally, you can replace 'NoneValue' back to None after the groupby operation if needed.
           client_df['PUT/CALL'].replace('No Value', np.nan, inplace=True)
-          print("client-----------------df", client_df)
           desc_col_values = client_df['PUT/CALL']
           client_df.drop(['PUT/CALL'], axis=1, inplace=True)
       elif cusip_column and quantity_column is not None:
