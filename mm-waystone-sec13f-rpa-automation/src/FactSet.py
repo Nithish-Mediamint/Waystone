@@ -1,5 +1,6 @@
 import time
 import requests
+import os
 import pandas as pd
 from pprint import pprint
 from fds.sdk.utils.authentication import ConfidentialClient
