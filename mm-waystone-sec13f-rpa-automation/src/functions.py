@@ -580,7 +580,6 @@ def Cleaning_Top_And_Bottom_rows(df,combined_df):
    #
    df = df.reset_index(drop=True)
    combined_df = combined_df.reset_index(drop=True)
-   print(df)
    combined_df = pd.concat([combined_df, df], ignore_index=True, sort=False)
    print(combined_df.index.is_unique)
    return combined_df
