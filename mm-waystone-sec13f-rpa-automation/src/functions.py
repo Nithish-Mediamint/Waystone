@@ -111,6 +111,10 @@ def merge_results(client_df: pd.DataFrame,
                   cusip_col: str,
                   result_df: pd.DataFrame,
                   sec13f_df: pd.DataFrame):
+    
+    #deleted status based...
+    sec13f_df = sec13f_df[sec13f_df['STATUS'].str.strip() != 'DELETED']
+    sec13f_df.reset_index(drop=True, inplace=True)
     # Sanitize columns...
     client_df[cusip_col] = client_df[cusip_col].str.replace(' ', '')
     sec13f_df['CUSIP NO_formatted'] = sec13f_df['CUSIP NO'].str.replace(' ', '')
