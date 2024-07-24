@@ -226,19 +226,20 @@ def insert_dataframe_into_worksheet(ws, df, start_row=5, start_col=1):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
 
-def write_13f_excel(sec_13f_df):
+def write_13f_excel(sec_13f_df,client_data_file_name):
     # Create a new Excel workbook and select the active worksheet
     wb = openpyxl.Workbook()
     ws = wb.active
 
     ws['A1'] = 'SEC 13F Report'
+    ws['A2'] = client_data_file_name 
     from datetime import datetime
     # today_date = datetime.now().strftime('%Y-%m-%d')
     # Get the current date
     current_date = datetime.now()
     # Calculate the last day of the previous quarter
     default_as_on_date = last_date_of_previous_quarter()
-    ws['A2'] = f'As Of: {default_as_on_date}'
+    ws['A3'] = f'As Of: {default_as_on_date}'
     # ws['A2'] = eod_date
     count = len(sec_13f_df)
     total_market_value = sec_13f_df['Market Value'].sum()
@@ -284,7 +285,7 @@ def convert_ws_13f(ws_df):
     return sec_13f_report_df
 
 
-def generate_ws_13f(ws_revised=None):
+def generate_ws_13f(ws_revised=None,client_data_file_name=None):
     if ws_revised is None and 'working_sheet_df' in st.session_state:
         ws_df = st.session_state['working_sheet_df']
         sec_13f_df = convert_ws_13f(ws_df)
@@ -292,11 +293,11 @@ def generate_ws_13f(ws_revised=None):
         sec_13f_df = convert_ws_13f(ws_revised)
     else:
         st.error("Please Generate a Working sheet before attempting to download 13F (Ecxel)")
-    return write_13f_excel(sec_13f_df)
+    return write_13f_excel(sec_13f_df,client_data_file_name)
 
 
-def generate_13f_from_ws(ws_df):
-    sec_13f_excel = generate_ws_13f(ws_df)
+def generate_13f_from_ws(ws_df,client_data_file_name):
+    sec_13f_excel = generate_ws_13f(ws_df,client_data_file_name)
     return sec_13f_excel
     sec_13f_cols = ['Security Name', 'Class', 'CUSIP', 'FIGI', 'Market Value', 'Shares', 'SH/PRN', 'PUT/CALL',
                     'Discretion', 'Managers', 'Sole', 'Shared', 'None']
