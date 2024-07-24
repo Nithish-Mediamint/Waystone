@@ -644,6 +644,11 @@ with tab2:
         ":blue[Upload Client Data]", type=["xlsx"], key="client_data"
     )
     if client_data_file is not None:
+        client_data_file_name = client_data_file.name
+        if "_cleaned" in client_data_file_name:
+            client_data_file_name = client_data_file_name.split("_cleaned")[0]
+        else:
+            client_data_file_name = client_data_file_name.split(".xlsx")[0]
         client_df = pd.read_excel(client_data_file)
         st.session_state["client_df"] = client_df
         st.write(f"Preview of Client Data ({n_preview} rows only):")
@@ -954,10 +959,11 @@ with tab3:  # '../resources/WorkingSheetTemplate.xlsx'
         ws_df_excel = convert_ws_to_excel(
             st.session_state["working_sheet_df"]
         )  # Convert DataFrame to Excel
+        filename = client_data_file_name + "_WorkingSheet Sec13F.xlsx"
         st.download_button(
             label="📥 Download Working Sheet Excel",
             data=ws_df_excel,
-            file_name="WorkingSheet Sec13F.xlsx",
+            file_name=filename,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -969,15 +975,20 @@ with tab4:
         key="ws_revised",
     )
     if uploaded_ws_file is not None:
+        client_data_file_name = uploaded_ws_file.name
+        if "_WorkingSheet Sec13F" in client_data_file_name:
+            client_data_file_name = client_data_file_name.split("_WorkingSheet Sec13F")[0]
+        else:
+            client_data_file_name = client_data_file_name.split(".xlsx")[0]
         uploaded_ws_df = pd.read_excel(uploaded_ws_file)
         is_correct, msg = validate_ws_cols(uploaded_ws_df)
         if is_correct:
-            sec_13f_excel_revised = generate_13f_from_ws(uploaded_ws_df)
-
+            sec_13f_excel_revised = generate_13f_from_ws(uploaded_ws_df,client_data_file_name)
+            filename = client_data_file_name + "_WorkingSheet Sec13F.xlsx"
             st.download_button(
                 "Download SEC-13F Report (Excel)",
                 data=sec_13f_excel_revised,
-                file_name="sec_13f_report.xlsx",
+                file_name=filename,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
         else:
