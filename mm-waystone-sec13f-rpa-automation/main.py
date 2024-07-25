@@ -876,7 +876,7 @@ with tab2:
                             client_df, cusip_column, quantity_column, as_on_date
                         )
                         st.success(
-                            'Please switch to the "SEC-13F" tab to examine the mappings.'
+                            'Please switch to the "Working Sheet" tab to examine the mappings.'
                         )
         else:
             st.error(
