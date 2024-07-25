@@ -984,7 +984,7 @@ with tab4:
         is_correct, msg = validate_ws_cols(uploaded_ws_df)
         if is_correct:
             sec_13f_excel_revised = generate_13f_from_ws(uploaded_ws_df,client_data_file_name)
-            filename = client_data_file_name + "_WorkingSheet Sec13F.xlsx"
+            filename = client_data_file_name + "_Sec_13F_report.xlsx"
             st.download_button(
                 "Download SEC-13F Report (Excel)",
                 data=sec_13f_excel_revised,
