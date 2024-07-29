@@ -197,12 +197,13 @@ def handle_cusips(client_df, cusip_column, quantity_column, price_as_on_date):
         #     axis=1)
         if ws_df is not None:
             ws_df["De Minimis?"] = ws_df.apply(
-                lambda x: "Yes"
+                lambda x: "-"
+                if pd.isna(x[quantity_column]) or pd.isna(x["Market Value (Quantity*Price)"])
+                else "Yes"
                 if x[quantity_column] < 10000
-                and x["Market Value (Quantity*Price)"] < 200000
+                   and x["Market Value (Quantity*Price)"] < 200000
                 else "No",
-                axis=1,
-            )
+                axis=1)
         else:
             print("Not Available")
         print("Data............", ws_df)
@@ -718,7 +719,6 @@ with tab2:
             # client_df[cusip_column] = client_df[cusip_column].str.apply(lambda x: x.zfill(9))
 
             ids = list(client_df[cusip_column])
-            print(ids)
             price_as_on_date = datetime(2024, 6, 30)
             as_on_date = price_as_on_date.strftime("%m/%d/%Y")
             display_names = ["EODPrice"]
@@ -728,8 +728,6 @@ with tab2:
             time_Series_df = processor.fetch_time_series_data(
                 ids, timeSeries_formulas, display_names
             )
-            print("489999_cross\n", cross_series_df)
-            print("499999_time\n", time_Series_df)
             merged_df = pd.merge(
                 cross_series_df,
                 time_Series_df,
@@ -743,13 +741,14 @@ with tab2:
             if cross_series_df is not None:
                 # Do something with the results_df
                 pass
+            df2_aggregated = cross_series_df.groupby('requestId', as_index=False).agg({'EODPrice': 'first'})
             client_df = client_df.merge(
-                cross_series_df[["requestId", "EODPrice"]],
+                df2_aggregated[["requestId", "EODPrice"]],
                 left_on=cusip_column,
                 right_on="requestId",
                 how="left",
             )
-            print("497777777777777777777777777\n", client_df)
+            print("merge\n", client_df)
 
         # Calculate the market value column based on the given price and quantity
         if market_value_column is not None:
@@ -981,6 +980,7 @@ with tab4:
         else:
             client_data_file_name = client_data_file_name.split(".xlsx")[0]
         uploaded_ws_df = pd.read_excel(uploaded_ws_file)
+        uploaded_ws_df = uploaded_ws_df[uploaded_ws_df["De Minimis?"].isin(["No", "-"])]
         is_correct, msg = validate_ws_cols(uploaded_ws_df)
         if is_correct:
             sec_13f_excel_revised = generate_13f_from_ws(uploaded_ws_df,client_data_file_name)
