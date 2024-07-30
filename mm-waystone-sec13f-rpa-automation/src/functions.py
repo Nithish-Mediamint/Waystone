@@ -125,10 +125,10 @@ def merge_results(client_df: pd.DataFrame,
                          suffixes=('', '_drop'))
     merged_df = merged_df.loc[:, ~merged_df.columns.str.endswith('_drop')]
     merged_df = merged_df.drop(['CUSIP NO_formatted', 'ASTRK'], axis=1, errors='ignore')
-
+    result_df = result_df.drop_duplicates(subset = ["requestId","CUSIP","EODPrice","Ticker"],keep='first')
     R = merged_df.merge(result_df, left_on=cusip_col, right_on='requestId', how='left', suffixes=('', '_drop'))
-    R = R.drop_duplicates().reset_index()
-    R.drop("index", axis=1, inplace=True)
+    # R = R.drop_duplicates().reset_index()
+    # R.drop("index", axis=1, inplace=True)
     R = R.loc[:, ~R.columns.str.endswith('_drop')]
 
     R['Ticker'] = R.apply(lambda x: str(x['Ticker']).replace('-USA', ''), axis=1)
