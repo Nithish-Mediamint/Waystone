@@ -316,33 +316,14 @@ def generate_13f_from_ws(ws_df,client_data_file_name):
     excel_io.seek(0)  # Go to the start of the stream
     return excel_io
 
-
-# getting missing cusip using ticker symbol in quantum online website
-
-
 def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
-    def fetch_cusip_from_ticker(ticker):
+    def fetch_cusip_from_tickers(tickers):
         processor = FormulaDataProcessor()
-        ids = [ticker]
+        ids = tickers
         display_names = ["cusip"]
         timeSeries_formulas = ["FF_CUSIP(CURR)"]
-        crossSeries_formulas = ["FF_CUSIP(CURR)"]
-        price_as_on_date = datetime(2024, 6, 30)
-        as_on_date = price_as_on_date.strftime("%m/%d/%Y")
-
         time_series_df = processor.fetch_time_series_data(ids, timeSeries_formulas, display_names)
-
-        if time_series_df is not None and not time_series_df.empty:
-            return time_series_df["cusip"][0]
-        else:
-            cross_series_df = processor.fetch_data(ids, crossSeries_formulas, display_names)
-            if cross_series_df is not None and not cross_series_df.empty:
-                return cross_series_df["cusip"][0]
-            else:
-                None
-
-
-    cusips = client_df[cusip_col].tolist()
+        return time_series_df
 
     def extract_ticker(ticker_value):
         # Ensure the ticker_value is a string
@@ -352,36 +333,24 @@ def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
         # Assume the ticker is always the first part
         return components[0]
 
-    for i in range(len(client_df)):
-        if pd.isnull(client_df[cusip_col][i]) or client_df[cusip_col][i] == "":
-            # Extract the ticker from the column
-            ticker = extract_ticker(client_df[ticker_col][i])
-            print("tllllllll:", ticker)
-            # Simulate fetching CUSIP for each ticker
-            cusip = fetch_cusip_from_ticker(ticker)
-            client_df.loc[i, cusip_col] = cusip
+    # Collect all tickers that need CUSIP fetching
+    tickers_to_fetch = []
+    for index, row in client_df.iterrows():
+        if pd.isnull(row[cusip_col]) or row[cusip_col] == "":
+            ticker = extract_ticker(row[ticker_col])
+            tickers_to_fetch.append(ticker)
 
-    # # List to hold futures
-    # futures = []
-    #
-    # # Function to process each row
-    # def process_row(i):
-    #     if pd.isnull(client_df[cusip_col][i]) or client_df[cusip_col][i] == "":
-    #         ticker = extract_ticker(client_df[ticker_col][i])
-    #         cusip = fetch_cusip_from_ticker(ticker)
-    #         client_df.loc[i, cusip_col] = cusip
-    #
-    # # Use ThreadPoolExecutor for concurrent processing
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     for i in range(len(client_df)):
-    #         futures.append(executor.submit(process_row, i))
-    #
-    #     # Wait for all futures to complete
-    #     for future in concurrent.futures.as_completed(futures):
-    #         pass  # No action needed here since client_df is updated in place
-    #
-    # return client_df
-
+    # Fetch CUSIPs for all tickers in one go
+    if tickers_to_fetch:
+        cusip_dict = fetch_cusip_from_tickers(tickers_to_fetch)
+        # Update client_df with fetched CUSIPs
+        for index, row in client_df.iterrows():
+            # sleep(0.01)
+            if pd.isnull(row[cusip_col]) or row[cusip_col] == "":
+                ticker = extract_ticker(row[ticker_col])
+                for index1, row1 in cusip_dict.iterrows():
+                    if ticker == row1["requestId"]:
+                        client_df.loc[index, cusip_col] = cusip_dict.loc[index1, "cusip"]
 
 def last_date_of_previous_quarter():
     # Get the current date
