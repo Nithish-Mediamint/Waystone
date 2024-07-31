@@ -807,7 +807,7 @@ with tab2:
                 axis=1,
             )
             print("client-df\n", client_df)
-            client_df["PUT/CALL"].fillna("NoneValue", inplace=True)
+            client_df["PUT/CALL"].fillna(" ", inplace=True)
             print("client-----------------df", client_df)
             # Group by 'cusip_column' and 'PUT/CALL', sum 'quantity_column', and reset index
             client_df = (
@@ -980,7 +980,13 @@ with tab4:
         else:
             client_data_file_name = client_data_file_name.split(".xlsx")[0]
         uploaded_ws_df = pd.read_excel(uploaded_ws_file)
-        uploaded_ws_df = uploaded_ws_df[uploaded_ws_df["De Minimis?"].isin(["No", "-"])]
+        cusips_with_put_call_yes = uploaded_ws_df[uploaded_ws_df['PUT/CALL'].isin(['PUT', 'CALL']) & (uploaded_ws_df['De Minimis?'] == 'Yes')]
+        cusips_with_put_call_No = uploaded_ws_df[uploaded_ws_df['PUT/CALL'].isin(['PUT', 'CALL']) & (uploaded_ws_df['De Minimis?'] == 'No')]
+        cusips_all_no_not_put_call = uploaded_ws_df[~uploaded_ws_df['PUT/CALL'].isin(['PUT', 'CALL']) & (uploaded_ws_df['De Minimis?'] == 'No')]
+        filtered_df1 = cusips_with_put_call_yes[cusips_with_put_call_yes['CUSIP (Client)'].isin(cusips_all_no_not_put_call['CUSIP (Client)'])]
+        result_df_matched = pd.concat([cusips_all_no_not_put_call, filtered_df1], ignore_index=True)
+        uploaded_ws_df = pd.concat([result_df_matched, cusips_with_put_call_No], ignore_index=True)
+        uploaded_ws_df = uploaded_ws_df.sort_values(by='Issuer Name (SEC)')
         is_correct, msg = validate_ws_cols(uploaded_ws_df)
         if is_correct:
             sec_13f_excel_revised = generate_13f_from_ws(uploaded_ws_df,client_data_file_name)
