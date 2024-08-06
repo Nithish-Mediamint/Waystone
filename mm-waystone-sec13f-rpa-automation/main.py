@@ -405,27 +405,21 @@ with tab0:
 
         if st.button("Merge Files"):
 
-            def to_excel(df):
-                output = BytesIO()
-                with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    df.to_excel(writer, index=False, sheet_name="Sheet1")
-                processed_data = output.getvalue()
-                return processed_data
 
-            def main():
-                excel_data = to_excel(combined_df)
-                st.caption(
-                    "Your file is ready. Please click the below button to download the merged file."
-                )
-                st.download_button(
-                    label="Download Excel file",
-                    data=excel_data,
-                    file_name=f"{file_name}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
 
-            if __name__ == "__main__":
-                main()
+
+            excel_data = to_excel(combined_df)
+            st.caption(
+                "Your file is ready. Please click the below button to download the merged file."
+            )
+            st.download_button(
+                label="Download Excel file",
+                data=excel_data,
+                file_name=f"{file_name}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+
 
     # Upload area for Client Data
     st.subheader("Combined multiple sheets into one sheet ")
@@ -447,22 +441,10 @@ with tab0:
             df = pd.read_excel(xls, sheet_name=sheet_name)
 
             combined_df = Cleaning_Top_And_Bottom_rows(df, combined_df)
-
-        # # Save the combined DataFrame to a new Excel file
-        # combined_df.to_excel(r'C:\Users\mm3816\Desktop\ravi_files\combined_sheets.xlsx', index=False)
-
-        # print("All sheets have been combined into 'combined_sheets_aligned.xlsx'.")
-        # print(combined_df.columns)
-        # print(combined_df)
         st.dataframe(combined_df)
         if st.button("combine all sheets into one"):
 
-            def to_excel(df):
-                output = BytesIO()
-                with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    df.to_excel(writer, index=False, sheet_name="Sheet1")
-                processed_data = output.getvalue()
-                return processed_data
+
 
             def main():
                 excel_data = to_excel(combined_df)
@@ -524,13 +506,8 @@ with tab0:
                 f"Now  we have :green[{client_df[cusip_column].isnull().sum()}] missing cusips"
             )
 
-            # Function to convert dataframe to excel
-            def to_excel(df):
-                output = BytesIO()
-                with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    df.to_excel(writer, index=False, sheet_name="Sheet1")
-                processed_data = output.getvalue()
-                return processed_data
+
+
 
             # Main function to handle download button
             def main():
@@ -807,7 +784,7 @@ with tab2:
                 axis=1,
             )
             print("client-df\n", client_df)
-            client_df["PUT/CALL"].fillna(" ", inplace=True)
+            client_df["PUT/CALL"].fillna("NoneValue", inplace=True)
             print("client-----------------df", client_df)
             # Group by 'cusip_column' and 'PUT/CALL', sum 'quantity_column', and reset index
             client_df = (
@@ -980,13 +957,7 @@ with tab4:
         else:
             client_data_file_name = client_data_file_name.split(".xlsx")[0]
         uploaded_ws_df = pd.read_excel(uploaded_ws_file)
-        cusips_with_put_call_yes = uploaded_ws_df[uploaded_ws_df['PUT/CALL'].isin(['PUT', 'CALL']) & (uploaded_ws_df['De Minimis?'] == 'Yes')]
-        cusips_with_put_call_No = uploaded_ws_df[uploaded_ws_df['PUT/CALL'].isin(['PUT', 'CALL']) & (uploaded_ws_df['De Minimis?'] == 'No')]
-        cusips_all_no_not_put_call = uploaded_ws_df[~uploaded_ws_df['PUT/CALL'].isin(['PUT', 'CALL']) & (uploaded_ws_df['De Minimis?'] == 'No')]
-        filtered_df1 = cusips_with_put_call_yes[cusips_with_put_call_yes['CUSIP (Client)'].isin(cusips_all_no_not_put_call['CUSIP (Client)'])]
-        result_df_matched = pd.concat([cusips_all_no_not_put_call, filtered_df1], ignore_index=True)
-        uploaded_ws_df = pd.concat([result_df_matched, cusips_with_put_call_No], ignore_index=True)
-        uploaded_ws_df = uploaded_ws_df.sort_values(by='Issuer Name (SEC)')
+        uploaded_ws_df = uploaded_ws_df[uploaded_ws_df["De Minimis?"].isin(["No", "-"])]
         is_correct, msg = validate_ws_cols(uploaded_ws_df)
         if is_correct:
             sec_13f_excel_revised = generate_13f_from_ws(uploaded_ws_df,client_data_file_name)
