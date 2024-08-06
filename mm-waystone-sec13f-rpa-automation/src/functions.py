@@ -13,9 +13,6 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 from src.cusip_to_ticker import parallel_fetch_tickers, map_sec13f, map_eod
 
 from src.FactSet import FormulaDataProcessor
-import concurrent.futures
-
-
 
 def get_input(key_prefix):
     """Helper function to get top-left, bottom-right cell coordinates, and header option from the user."""
@@ -53,6 +50,14 @@ def load_dataframe_from_excel(file, top_left, bottom_right, header):
 
 def handle_ticker():
     print('Mapping client Tickers')
+
+
+def to_excel(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Sheet1")
+    processed_data = output.getvalue()
+    return processed_data
 
 
 def map_eod_sec13f(client_data_df, sec13f_df, cusip_col, quantity_col):
@@ -111,8 +116,7 @@ def merge_results(client_df: pd.DataFrame,
                   cusip_col: str,
                   result_df: pd.DataFrame,
                   sec13f_df: pd.DataFrame):
-    
-    #deleted status based...
+    # deleted status based...
     sec13f_df = sec13f_df[sec13f_df['STATUS'].str.strip() != 'DELETED']
     sec13f_df.reset_index(drop=True, inplace=True)
     # Sanitize columns...
@@ -125,7 +129,7 @@ def merge_results(client_df: pd.DataFrame,
                          suffixes=('', '_drop'))
     merged_df = merged_df.loc[:, ~merged_df.columns.str.endswith('_drop')]
     merged_df = merged_df.drop(['CUSIP NO_formatted', 'ASTRK'], axis=1, errors='ignore')
-    result_df = result_df.drop_duplicates(subset = ["requestId","CUSIP","EODPrice","Ticker"],keep='first')
+    result_df = result_df.drop_duplicates(subset=["requestId", "CUSIP", "EODPrice", "Ticker"], keep='first')
     R = merged_df.merge(result_df, left_on=cusip_col, right_on='requestId', how='left', suffixes=('', '_drop'))
     # R = R.drop_duplicates().reset_index()
     # R.drop("index", axis=1, inplace=True)
@@ -226,13 +230,13 @@ def insert_dataframe_into_worksheet(ws, df, start_row=5, start_col=1):
             ws.cell(row=r_idx, column=c_idx, value=value)
 
 
-def write_13f_excel(sec_13f_df,client_data_file_name):
+def write_13f_excel(sec_13f_df, client_data_file_name):
     # Create a new Excel workbook and select the active worksheet
     wb = openpyxl.Workbook()
     ws = wb.active
 
     ws['A1'] = 'SEC 13F Report'
-    ws['A2'] = client_data_file_name 
+    ws['A2'] = client_data_file_name
     from datetime import datetime
     # today_date = datetime.now().strftime('%Y-%m-%d')
     # Get the current date
@@ -284,8 +288,7 @@ def convert_ws_13f(ws_df):
 
     return sec_13f_report_df
 
-
-def generate_ws_13f(ws_revised=None,client_data_file_name=None):
+def generate_ws_13f(ws_revised=None, client_data_file_name=None):
     if ws_revised is None and 'working_sheet_df' in st.session_state:
         ws_df = st.session_state['working_sheet_df']
         sec_13f_df = convert_ws_13f(ws_df)
@@ -293,11 +296,11 @@ def generate_ws_13f(ws_revised=None,client_data_file_name=None):
         sec_13f_df = convert_ws_13f(ws_revised)
     else:
         st.error("Please Generate a Working sheet before attempting to download 13F (Ecxel)")
-    return write_13f_excel(sec_13f_df,client_data_file_name)
+    return write_13f_excel(sec_13f_df, client_data_file_name)
 
 
-def generate_13f_from_ws(ws_df,client_data_file_name):
-    sec_13f_excel = generate_ws_13f(ws_df,client_data_file_name)
+def generate_13f_from_ws(ws_df, client_data_file_name):
+    sec_13f_excel = generate_ws_13f(ws_df, client_data_file_name)
     return sec_13f_excel
     sec_13f_cols = ['Security Name', 'Class', 'CUSIP', 'FIGI', 'Market Value', 'Shares', 'SH/PRN', 'PUT/CALL',
                     'Discretion', 'Managers', 'Sole', 'Shared', 'None']
@@ -315,6 +318,7 @@ def generate_13f_from_ws(ws_df,client_data_file_name):
     # Return the in-memory buffer containing the Excel file
     excel_io.seek(0)  # Go to the start of the stream
     return excel_io
+
 
 def parallel_fetch_cusips(client_df, ticker_col, cusip_col):
     def fetch_cusip_from_tickers(tickers):
@@ -370,7 +374,7 @@ def last_date_of_previous_quarter():
 
     return last_day_previous_quarter.strftime('%Y-%m-%d')
 
-def Cleaning_Top_And_Bottom_rows(df,combined_df):
+def Cleaning_Top_And_Bottom_rows(df, combined_df):
     unnamed_columns = df.columns[df.columns.str.startswith('Unnamed:') & ~df.columns.isna()]
 
     percentage_unnamed = len(unnamed_columns) / len(df.columns)
