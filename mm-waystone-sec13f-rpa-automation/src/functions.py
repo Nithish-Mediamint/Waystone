@@ -141,7 +141,6 @@ def merge_results(client_df: pd.DataFrame,
     # R = R.drop(['CUSIP'], axis=1, errors='ignore')
     return R
 
-
 def run_mappings(client_df: pd.DataFrame,
                  sec13f_df: pd.DataFrame,
                  cusip_col: str,
@@ -157,9 +156,10 @@ def run_mappings(client_df: pd.DataFrame,
     display_names = ["CUSIP", "EODPrice", "Ticker", "Country"]
 
     start_time = time.time()  # Record start time
-    cross_series_df = fs_processor.fetch_data(ids, cross_formulas, display_names)
-    time.sleep(2)
-    time_Series_df = fs_processor.fetch_time_series_data(ids, timeSeries_formulas, display_names)
+    # cross_series_df = fs_processor.fetch_data(ids, cross_formulas, display_names)
+    # time_Series_df = fs_processor.fetch_time_series_data(ids, timeSeries_formulas, display_names)
+    cross_series_df=fetch_with_retry(fs_processor.fetch_data(ids, cross_formulas, display_names))
+    time_Series_df =fetch_with_retry(fs_processor.fetch_time_series_data(ids, timeSeries_formulas, display_names))
     merged_df = pd.merge(cross_series_df, time_Series_df, on='requestId', suffixes=('_df1', '_df2'))
     cross_series_df['EODPrice'].fillna(merged_df['EODPrice_df2'], inplace=True)
     cross_series_df['Ticker'].fillna(merged_df['Ticker_df2'], inplace=True)
@@ -420,3 +420,17 @@ def Cleaning_Top_And_Bottom_rows(df,combined_df):
     combined_df = pd.concat([combined_df, df], ignore_index=True, sort=False)
     print(combined_df.index.is_unique)
     return combined_df
+
+def fetch_with_retry(fetch_function, *args, max_retries=5, delay=5, **kwargs):
+    retries = 0
+    while retries < max_retries:
+        try:
+            result = fetch_function(*args, **kwargs)
+            if result is not None and not result.empty:
+                return result
+        except Exception as e:
+            print(f"Error fetching data: {e}")
+        retries += 1
+        print(f"Retrying {retries}/{max_retries}...")
+        time.sleep(delay)
+    raise RuntimeError("Failed to fetch data after several retries.")
