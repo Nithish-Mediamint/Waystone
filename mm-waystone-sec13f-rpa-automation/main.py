@@ -676,7 +676,7 @@ with tab2:
         )
 
         desc_column = st.selectbox(
-            "Select the Description column:*",
+            "Select the Description(Options) column:*",
             client_df_columns,
             index=client_df_columns.index(None),
             key="description1",
