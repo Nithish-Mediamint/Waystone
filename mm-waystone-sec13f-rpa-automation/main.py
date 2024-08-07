@@ -724,17 +724,61 @@ with tab2:
             display_names = ["EODPrice"]
             timeSeries_formulas = ["P_PRICE(NOW)"]
             cross_formulas = [f"FG_PRICE({as_on_date})"]
-            cross_series_df = processor.fetch_data(ids, cross_formulas, display_names)
-            time_Series_df = processor.fetch_time_series_data(
-                ids, timeSeries_formulas, display_names
-            )
-            merged_df = pd.merge(
-                cross_series_df,
-                time_Series_df,
-                on="requestId",
-                suffixes=("_df1", "_df2"),
-            )
-            print("merged_df", merged_df)
+            # cross_series_df = processor.fetch_data(ids, cross_formulas, display_names)
+            # time_Series_df = processor.fetch_time_series_data(
+            #     ids, timeSeries_formulas, display_names
+            # )
+            # merged_df = pd.merge(
+            #     cross_series_df,
+            #     time_Series_df,
+            #     on="requestId",
+            #     suffixes=("_df1", "_df2"),
+            # )
+            # print("merged_df", merged_df)
+           
+            def fetch_with_retry(fetch_function, *args, max_retries=5, delay=5, **kwargs):
+                """
+                Fetch data with retries if None is returned.
+                
+                Args:
+                    fetch_function: The function to fetch data.
+                    *args: Positional arguments to pass to the fetch function.
+                    max_retries: Maximum number of retries before giving up.
+                    delay: Time in seconds to wait between retries.
+                    **kwargs: Keyword arguments to pass to the fetch function.
+                    
+                Returns:
+                    DataFrame: Retrieved data as a DataFrame.
+                """
+                retries = 0
+                while retries < max_retries:
+                    result = fetch_function(*args, **kwargs)
+                    if result is not None and not result.empty:
+                        return result
+                    retries += 1
+                    print(f"Data fetch failed. Retrying {retries}/{max_retries}...")
+                    time.sleep(delay)
+                raise RuntimeError("Failed to fetch data after several retries.")
+            
+            # Example usage
+            cross_series_df = fetch_with_retry(processor.fetch_data, ids, cross_formulas, display_names)
+            print("cross:\n", cross_series_df)
+            
+            time_series_df = fetch_with_retry(processor.fetch_time_series_data, ids, timeSeries_formulas, display_names)
+            print("time:\n", time_series_df)
+            
+            # Ensure data is valid before merging
+            if not cross_series_df.empty and not time_series_df.empty:
+                merged_df = pd.merge(
+                    cross_series_df,
+                    time_series_df,
+                    on="requestId",
+                    suffixes=("_df1", "_df2"),
+                )
+                print("merged_df:\n", merged_df)
+            else:
+                print("One or both dataframes are empty. Unable to merge.")
+
             cross_series_df["EODPrice"].fillna(merged_df["EODPrice_df2"], inplace=True)
             # cross_series_df['Ticker'].fillna(merged_df['Ticker_df2'], inplace=True)
             print("priceeeeeeeeeeeeeeeeeeeee:\n", cross_series_df)
