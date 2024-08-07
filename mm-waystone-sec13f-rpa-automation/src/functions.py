@@ -156,10 +156,11 @@ def run_mappings(client_df: pd.DataFrame,
     display_names = ["CUSIP", "EODPrice", "Ticker", "Country"]
 
     start_time = time.time()  # Record start time
-    # cross_series_df = fs_processor.fetch_data(ids, cross_formulas, display_names)
-    # time_Series_df = fs_processor.fetch_time_series_data(ids, timeSeries_formulas, display_names)
-    cross_series_df=fetch_with_retry(fs_processor.fetch_data(ids, cross_formulas, display_names))
-    time_Series_df =fetch_with_retry(fs_processor.fetch_time_series_data(ids, timeSeries_formulas, display_names))
+    cross_series_df = fs_processor.fetch_data(ids, cross_formulas, display_names)
+    time.sleep(3)
+    time_Series_df = fs_processor.fetch_time_series_data(ids, timeSeries_formulas, display_names)
+    # cross_series_df=fetch_with_retry(fs_processor.fetch_data(ids, cross_formulas, display_names))
+    # time_Series_df =fetch_with_retry(fs_processor.fetch_time_series_data(ids, timeSeries_formulas, display_names))
     merged_df = pd.merge(cross_series_df, time_Series_df, on='requestId', suffixes=('_df1', '_df2'))
     cross_series_df['EODPrice'].fillna(merged_df['EODPrice_df2'], inplace=True)
     cross_series_df['Ticker'].fillna(merged_df['Ticker_df2'], inplace=True)
